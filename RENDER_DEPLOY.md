@@ -5,10 +5,12 @@
    committed; uploaded datasets and per-upload outputs remain excluded.
 2. In Render, create a Blueprint from that repository and select this
    folder's `render.yaml` if the repository root is a parent folder.
-3. Set `GEMINI_API_KEY` in the Render service environment using a newly
+3. Set `APP_USERNAME` and `APP_PASSWORD` in the Render service environment.
+   Keep both values private; all app pages and data routes require this login.
+4. Set `GEMINI_API_KEY` in the Render service environment using a newly
    generated key. The key previously stored in `config.py` should be revoked.
    Render generates `FLASK_SECRET_KEY` from the Blueprint.
-4. Deploy. Render will install `requirements-render.txt` and start the Flask
+5. Deploy. Render will install `requirements-render.txt` and start the Flask
    app with Gunicorn. The chatbot remains hosted separately on Netlify and is
    embedded by the ChurnQ app.
 

@@ -1,4 +1,5 @@
 import io
+import hmac
 import os
 import re
 import json
@@ -64,6 +65,33 @@ app.config["MAX_CONTENT_LENGTH"] = MAX_CONTENT_LENGTH
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(PROCESSED_FOLDER, exist_ok=True)
+
+
+@app.before_request
+def require_app_login():
+    if request.endpoint in {"healthcheck", "static"}:
+        return None
+
+    if os.getenv("APP_AUTH_REQUIRED", "false").lower() != "true":
+        return None
+
+    username = os.getenv("APP_USERNAME")
+    password = os.getenv("APP_PASSWORD")
+    if not username or not password:
+        return "Application access is not configured.", 503
+
+    credentials = request.authorization
+    if (credentials is None
+            or not hmac.compare_digest(credentials.username or "", username)
+            or not hmac.compare_digest(credentials.password or "", password)):
+        response = app.response_class("Authentication required.", 401)
+        response.headers["WWW-Authenticate"] = 'Basic realm="ChurnQ"'
+        return response
+
+
+@app.route("/health")
+def healthcheck():
+    return jsonify(status="ok")
 
 
 def generate_filename(original_filename):
