@@ -1,0 +1,149 @@
+.assistant-dock {
+    position: fixed;
+    right: 22px;
+    bottom: 22px;
+    z-index: 1100;
+    display: flex;
+    align-items: flex-end;
+    flex-direction: column;
+    gap: 12px;
+    font-family: var(--font);
+}
+
+.assistant-dock-launcher {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 116px;
+    min-height: 50px;
+    padding: 0 16px;
+    border: 0;
+    border-radius: 9px;
+    background: var(--accent);
+    color: var(--on-dark);
+    box-shadow: 0 8px 26px rgba(0, 0, 0, 0.3);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.assistant-dock-launcher:hover,
+.assistant-dock-launcher:focus-visible {
+    background: var(--accent-deep);
+}
+
+.assistant-dock-spark {
+    font-size: 19px;
+    line-height: 1;
+}
+
+.assistant-dock-panel {
+    display: flex;
+    width: min(460px, calc(100vw - 32px));
+    height: min(700px, calc(100dvh - 110px));
+    min-height: 420px;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--frame);
+    border-radius: 10px;
+    background: var(--on-dark);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.34);
+}
+
+.assistant-dock-panel[hidden] {
+    display: none;
+}
+
+.assistant-dock-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 64px;
+    padding: 10px 14px;
+    background: var(--frame);
+    color: var(--ink);
+}
+
+.assistant-dock-kicker {
+    color: var(--pista-deep);
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.assistant-dock-header h2 {
+    margin: 2px 0 0;
+    font-size: 16px;
+    color: var(--accent);
+}
+
+.assistant-dock-close {
+    display: grid;
+    flex: 0 0 34px;
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    margin: 0;
+    padding: 0;
+    place-items: center;
+    border: 1px solid var(--field-line);
+    border-radius: 7px;
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+    font-size: 23px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.assistant-dock-close:hover,
+.assistant-dock-close:focus-visible {
+    border-color: var(--pista);
+    background: var(--pista);
+    color: var(--pista-deep);
+}
+
+.assistant-dock-panel iframe {
+    display: block;
+    flex: 1;
+    width: 100%;
+    min-height: 0;
+    border: 0;
+    background: var(--tile-hi);
+}
+
+@media (max-width: 700px) {
+    .assistant-dock {
+        right: 12px;
+        bottom: 12px;
+    }
+
+    .assistant-dock-panel {
+        width: min(460px, calc(100vw - 24px));
+        height: min(700px, calc(100dvh - 112px));
+        min-height: min(320px, calc(100dvh - 112px));
+    }
+
+}
+
+@media (max-width: 1000px) {
+    .navbar {
+        position: relative;
+    }
+
+    .brand {
+        order: 0;
+    }
+
+    .nav-steps {
+        order: 2;
+    }
+}
+
+@media (max-height: 560px) {
+    .assistant-dock-panel {
+        height: min(700px, calc(100dvh - 112px));
+        min-height: min(280px, calc(100dvh - 112px));
+    }
+}

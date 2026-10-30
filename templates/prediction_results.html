@@ -1,0 +1,398 @@
+{% extends "base.html" %}
+
+{% macro roc_svg(points, color) %}
+<svg viewBox="0 0 300 300" width="100%" style="max-width:360px;">
+    <rect x="10" y="10" width="280" height="280"
+          fill="none" stroke="#c9cedc" stroke-width="1"/>
+    <line x1="10" y1="290" x2="290" y2="10"
+          stroke="#c9cedc" stroke-dasharray="4 4"/>
+    <polyline fill="none" stroke="{{ color }}" stroke-width="2"
+        points="{% for p in points %}{{ (p[0] * 280 + 10)|round(1) }},{{ (290 - p[1] * 280)|round(1) }} {% endfor %}"/>
+    <text x="150" y="298" font-size="10" text-anchor="middle"
+          fill="#8089a3">False positive rate</text>
+    <text x="4" y="150" font-size="10" text-anchor="middle"
+          fill="#8089a3" transform="rotate(-90 4 150)">True positive rate</text>
+</svg>
+{% endmacro %}
+
+{% macro train_form(filename, max_train, full_train, aer_available, iter_default, button_class, button_label) %}
+<form method="POST" action="/train-vqc/{{ filename }}" id="train-form">
+
+    <p style="margin-bottom:6px;"><b>Training data</b></p>
+    <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:12px;">
+        <label>
+            <input type="radio" name="balance" value="balanced"
+                   class="balance-choice" checked>
+            Balanced (<b>{{ max_train }}</b> customers): every churner
+            plus an equal number of non-churners. Recommended, since the
+            VQC has no built-in way to weight the churn class.
+        </label>
+        <label>
+            <input type="radio" name="balance" value="full"
+                   class="balance-choice">
+            Full dataset (<b>{{ full_train }}</b> customers): every
+            training customer, at the real churn rate. Uses more data,
+            but with no class weighting the model may lean toward
+            predicting "no churn" &mdash; check recall after training.
+        </label>
+    </div>
+
+    <div style="display:flex; gap:16px; flex-wrap:wrap; margin-bottom:12px;">
+        <label>
+            COBYLA iterations<br>
+            <input type="number" name="maxiter" id="maxiter"
+                   value="{{ iter_default }}" min="30" max="300" step="10">
+        </label>
+        <label>
+            Simulator<br>
+            {% if aer_available %}
+            <select name="backend" id="backend">
+                <option value="fast">Fast (Aer, about 4x quicker)</option>
+                <option value="exact">Exact statevector (slower)</option>
+            </select>
+            {% else %}
+            <select name="backend" id="backend">
+                <option value="exact">Exact statevector</option>
+            </select>
+            {% endif %}
+        </label>
+    </div>
+
+    {% if not aer_available %}
+    <p style="font-size:0.9em; color:#8089a3;">
+        For a much faster run, install the Aer simulator with
+        <code>pip install qiskit-aer</code> and restart the app.
+    </p>
+    {% endif %}
+
+    <p id="time-estimate" style="font-size:0.9em; color:#8089a3;"></p>
+
+    <button type="submit" class="{{ button_class }}">{{ button_label }}</button>
+</form>
+
+<script>
+(function () {
+    var BALANCED_N = {{ max_train }};
+    var FULL_N = {{ full_train }};
+    var choices = document.querySelectorAll(".balance-choice");
+    var iters = document.getElementById("maxiter");
+    var backend = document.getElementById("backend");
+    var out = document.getElementById("time-estimate");
+
+    function fmt(sec) {
+        if (sec < 90) { return Math.round(sec) + " seconds"; }
+        if (sec < 5400) { return Math.round(sec / 60) + " minutes"; }
+        return (sec / 3600).toFixed(1) + " hours";
+    }
+    function update() {
+        var chosen = document.querySelector(".balance-choice:checked").value;
+        var n = chosen === "full" ? FULL_N : BALANCED_N;
+        var it = parseInt(iters.value || 0);
+        var per = backend.value === "fast" ? 0.0042 : 0.0167;
+        out.textContent = "Rough time estimate: about " + fmt(n * it * per) +
+            " (based on my test computer; yours may differ).";
+    }
+    choices.forEach(function (el) { el.addEventListener("change", update); });
+    [iters, backend].forEach(function (el) {
+        el.addEventListener("input", update);
+        el.addEventListener("change", update);
+    });
+    update();
+})();
+</script>
+{% endmacro %}
+
+{% block content %}
+
+<div class="stepper">
+    <div class="step done">
+        <div class="dot">1</div>
+        <div class="step-label">Upload</div>
+    </div>
+    <div class="step done">
+        <div class="dot">2</div>
+        <div class="step-label">Clean</div>
+    </div>
+    <div class="step done">
+        <div class="dot">3</div>
+        <div class="step-label">Anomaly Review</div>
+    </div>
+    <div class="step done">
+        <div class="dot">4</div>
+        <div class="step-label">Encoding + Scaling</div>
+    </div>
+    <div class="step done">
+        <div class="dot">5</div>
+        <div class="step-label">Feature Selection</div>
+    </div>
+    <div class="step active">
+        <div class="dot">6</div>
+        <div class="step-label">Quantum Training</div>
+    </div>
+</div>
+
+<h2>Quantum Model Training</h2>
+
+<p><b>{{ filename }}</b></p>
+
+{% if status.state == "error" %}
+<p style="color:#c0392b;">Training stopped: {{ status.message }}</p>
+{% endif %}
+
+{% if status.state == "running" %}
+
+<p>
+    The quantum classifier is learning from your labeled customers. This
+    can take a few minutes. You can keep this page open; it updates by
+    itself.
+</p>
+
+<div style="background:rgba(0,0,0,0.08); border-radius:8px; height:14px; max-width:420px;">
+    <div id="vqc-bar"
+         style="background:#8b5cf6; height:14px; border-radius:8px; width:0%; transition:width 0.4s;"></div>
+</div>
+<p id="vqc-text" style="font-size:0.9em; color:#8089a3;">Starting...</p>
+
+<script>
+(function () {
+    var url = "/vqc-status/{{ filename }}";
+    function poll() {
+        fetch(url)
+            .then(function (r) { return r.json(); })
+            .then(function (s) {
+                if (s.state === "done" || s.state === "error") {
+                    window.location.reload();
+                    return;
+                }
+                var it = s.iteration || 0;
+                var pct = Math.min(100, Math.round(it / s.maxiter * 100));
+                document.getElementById("vqc-bar").style.width = pct + "%";
+                document.getElementById("vqc-text").textContent =
+                    "Iteration " + it + " of " + s.maxiter +
+                    (s.last_loss !== null && s.last_loss !== undefined
+                        ? " | loss " + s.last_loss : "") +
+                    " | " + s.elapsed + "s elapsed";
+                setTimeout(poll, 2500);
+            })
+            .catch(function () { setTimeout(poll, 4000); });
+    }
+    poll();
+})();
+</script>
+
+{% elif vqc %}
+
+<p>
+    <span class="badge badge-green">Model trained</span>
+    The quantum classifier learned from {{ vqc.train_samples }} labeled
+    customers ({{ vqc.params.training_data_mode|lower }}, out of
+    {{ vqc.full_train_samples }} available) using {{ vqc.n_features }}
+    qubits. It was then checked on
+    {{ vqc.test_samples }} customers it had never seen
+    ({{ (vqc.test_churn_rate * 100)|round(1) }}% of them churned).
+</p>
+
+<h3>How Reliable Is the Model?</h3>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="value">{{ (vqc.metrics.accuracy * 100)|round(1) }}%</div>
+        <div class="label">Accuracy</div>
+    </div>
+    <div class="stat-card">
+        <div class="value">{{ (vqc.metrics.recall * 100)|round(1) }}%</div>
+        <div class="label">Recall (churn)</div>
+    </div>
+    <div class="stat-card">
+        <div class="value">{{ (vqc.metrics.precision * 100)|round(1) }}%</div>
+        <div class="label">Precision (churn)</div>
+    </div>
+    <div class="stat-card">
+        <div class="value">{{ (vqc.metrics.f1 * 100)|round(1) }}%</div>
+        <div class="label">F1 Score (churn)</div>
+    </div>
+    <div class="stat-card">
+        <div class="value">{{ vqc.metrics.roc_auc }}</div>
+        <div class="label">ROC-AUC</div>
+    </div>
+    <div class="stat-card">
+        <div class="value">{{ vqc.training_time_sec }}s</div>
+        <div class="label">Training Time</div>
+    </div>
+</div>
+
+<p style="font-size:0.9em; color:#8089a3;">
+    Only about a quarter of customers churn, so accuracy alone can
+    mislead. <b>Recall</b> shows how many real churners the model
+    catches, and <b>precision</b> shows how many flagged customers really
+    churned.
+</p>
+
+<h3>Confusion Matrix</h3>
+
+<div class="review-table-wrap">
+<table>
+    <thead>
+        <tr>
+            <th></th>
+            <th>Predicted: Stay</th>
+            <th>Predicted: Churn</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><b>Actual: Stay</b></td>
+            <td>{{ vqc.confusion_matrix.tn }} (true negatives)</td>
+            <td>{{ vqc.confusion_matrix.fp }} (false alarms)</td>
+        </tr>
+        <tr>
+            <td><b>Actual: Churn</b></td>
+            <td>{{ vqc.confusion_matrix.fn }} (missed churners)</td>
+            <td>{{ vqc.confusion_matrix.tp }} (churners caught)</td>
+        </tr>
+    </tbody>
+</table>
+</div>
+
+<h3>Training Loss</h3>
+
+{% set losses = vqc.loss_curve %}
+{% set n = losses|length %}
+{% if n > 1 %}
+{% set mx = losses|max %}
+{% set mn = losses|min %}
+{% set rng = (mx - mn) or 1 %}
+<svg viewBox="0 0 300 300" width="100%" style="max-width:360px;">
+    <rect x="10" y="10" width="280" height="280"
+          fill="none" stroke="#c9cedc" stroke-width="1"/>
+    <polyline fill="none" stroke="#8b5cf6" stroke-width="2"
+        points="{% for l in losses %}{{ (10 + loop.index0 / (n - 1) * 280)|round(1) }},{{ (280 - (l - mn) / rng * 260)|round(1) }} {% endfor %}"/>
+    <text x="150" y="298" font-size="10" text-anchor="middle"
+          fill="#8089a3">Iteration</text>
+    <text x="4" y="150" font-size="10" text-anchor="middle"
+          fill="#8089a3" transform="rotate(-90 4 150)">Loss</text>
+</svg>
+<p style="font-size:0.9em; color:#8089a3;">
+    Loss went from {{ losses[0] }} to {{ losses[-1] }} over
+    {{ vqc.iterations_run }} iterations. A falling curve means the model
+    is learning.
+</p>
+{% endif %}
+
+<h3>ROC Curve</h3>
+{{ roc_svg(vqc.roc_curve, "#8b5cf6") }}
+
+<h3>Quantum Circuit Settings</h3>
+
+<div class="review-table-wrap">
+<table>
+    <tbody>
+        <tr><td><b>Backend</b></td><td>{{ vqc.params.backend }}</td></tr>
+        <tr><td><b>Qubits</b></td><td>{{ vqc.params.n_qubits }}</td></tr>
+        <tr><td><b>Feature map</b></td><td>{{ vqc.params.feature_map }}</td></tr>
+        <tr><td><b>Ansatz</b></td><td>{{ vqc.params.ansatz }}</td></tr>
+        <tr><td><b>Trainable parameters</b></td><td>{{ vqc.params.trainable_parameters }}</td></tr>
+        <tr><td><b>Optimizer</b></td><td>{{ vqc.params.optimizer }}</td></tr>
+        <tr><td><b>Input scaling</b></td><td>{{ vqc.params.input_scaling }}</td></tr>
+        <tr><td><b>Features used</b></td><td>{{ vqc.features | join(", ") }}</td></tr>
+    </tbody>
+</table>
+</div>
+
+<h3>Try Different Cutoffs</h3>
+
+<p>
+    The model gives every customer a churn probability. By default,
+    anyone scored 50% or higher is called "will churn". Raising this
+    cutoff means fewer false alarms but more missed churners; lowering
+    it means the opposite. The model itself doesn't change &mdash; only
+    where the line is drawn.
+</p>
+
+<form method="POST" action="/threshold-analysis/{{ filename }}">
+    <button type="submit">Show Cutoff Comparison</button>
+</form>
+
+{% if threshold_results %}
+<div class="review-table-wrap" style="margin-top:16px;">
+<table>
+    <thead>
+        <tr>
+            <th>Cutoff</th>
+            <th>Accuracy</th>
+            <th>Precision</th>
+            <th>Recall</th>
+            <th>F1</th>
+            <th>Churners caught / missed</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for r in threshold_results %}
+        <tr {% if current_threshold and r.threshold == current_threshold %}style="background:rgba(79,109,245,0.08);"{% endif %}>
+            <td><b>{{ r.threshold }}</b></td>
+            <td>{{ (r.accuracy * 100)|round(1) }}%</td>
+            <td>{{ (r.precision * 100)|round(1) }}%</td>
+            <td>{{ (r.recall * 100)|round(1) }}%</td>
+            <td>{{ (r.f1 * 100)|round(1) }}%</td>
+            <td>{{ r.confusion_matrix.tp }} caught / {{ r.confusion_matrix.fn }} missed</td>
+            <td>
+                <form method="POST" action="/set-threshold/{{ filename }}" style="margin:0;">
+                    <input type="hidden" name="threshold" value="{{ r.threshold }}">
+                    <button type="submit" style="padding:4px 10px; font-size:0.85em;">Use this</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+<p style="font-size:0.9em; color:#8089a3;">
+    There's no universally "correct" cutoff &mdash; it depends on
+    whether missing a churner or chasing a false alarm costs your
+    project more. The row you pick becomes the cutoff used when
+    predicting on new customers later.
+</p>
+{% endif %}
+
+<h3>Use This Model for Predictions</h3>
+
+{% if is_active %}
+<p>
+    <span class="badge badge-green">Active model</span>
+    This trained model is the one used whenever anyone uploads a new
+    customer file for prediction, regardless of that file's name.
+</p>
+{% else %}
+<p>
+    This trained run is not yet the active model. Predictions on new,
+    unlabeled customer files always use whichever run was last saved as
+    active &mdash; not automatically the most recently trained one.
+</p>
+<form method="POST" action="/activate-model/{{ filename }}">
+    <button type="submit" class="btn-primary">Save as Active Model</button>
+</form>
+{% endif %}
+
+<h3>Train Again</h3>
+
+{{ train_form(filename, max_train, full_train, aer_available, 100, "", "Retrain Quantum Model") }}
+
+{% else %}
+
+<p>
+    The quantum classifier has not learned from your data yet. It trains
+    on labeled customers, meaning customers whose Churn outcome is known.
+    It uses every churner plus an equal number of non-churners, so the
+    model is not biased toward predicting that everyone stays.
+</p>
+
+{{ train_form(filename, max_train, full_train, aer_available, 100, "btn-primary", "Train Quantum Model") }}
+
+{% endif %}
+
+<div class="action-bar">
+    <a href="/feature-selection/{{ filename }}">← Back to Feature Selection</a>
+</div>
+
+{% endblock %}

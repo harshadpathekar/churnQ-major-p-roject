@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Prediction results · ChurnQ{% endblock %}
+{% block page_class %}page-bare{% endblock %}
+
+{% block content %}
+
+<div class="page-head">
+    <h1>Prediction results</h1>
+    <span class="meta">{{ filename.rsplit('.', 1)[0] }} · {{ '{:,}'.format(summary.total_customers) }} customers scored</span>
+</div>
+
+<p class="hint" style="margin: 0 6px; max-width: none; color: var(--text-2);">
+    Each customer has been scored by the active quantum model. Risk level is
+    based on churn probability: High is 66% and above, Medium is 33&ndash;66%,
+    Low is below 33%.
+</p>
+
+<div class="bento">
+
+    <section class="tile span-2 stat-tile">
+        <div class="tile-label">High risk customers</div>
+        <div class="big-num sm num-churn" style="margin: 6px 0 4px;">{{ summary.high_risk }}</div>
+        <div class="tile-cap">probability of 66% or more</div>
+    </section>
+
+    <section class="tile span-2 stat-tile">
+        <div class="tile-label">Medium risk customers</div>
+        <div class="big-num sm" style="margin: 6px 0 4px;">{{ summary.medium_risk }}</div>
+        <div class="tile-cap">probability of 33&ndash;66%</div>
+    </section>
+
+    <section class="tile span-2 stat-tile">
+        <div class="tile-label">Low risk customers</div>
+        <div class="big-num sm num-stay" style="margin: 6px 0 4px;">{{ summary.low_risk }}</div>
+        <div class="tile-cap">probability below 33%</div>
+    </section>
+
+    <section class="tile span-3 stat-tile">
+        <div class="tile-label">Share flagged high risk</div>
+        <div class="big-num sm" style="margin: 6px 0 4px;">{{ summary.high_risk_pct }}%</div>
+        <div class="tile-cap">of all customers in this file</div>
+    </section>
+
+    <section class="tile span-3 stat-tile">
+        <div class="tile-label">Average churn probability</div>
+        <div class="big-num sm" style="margin: 6px 0 4px;">{{ (summary.average_probability * 100) | round(1) }}%</div>
+        <div class="tile-cap">across all customers</div>
+    </section>
+
+    <section class="tile span-6">
+        <div class="tile-title">Ranked customers</div>
+        <p class="hint">
+            The 50 highest-risk customers, highest first. Download the full
+            file below for every customer in this upload.
+        </p>
+        <div class="review-table-wrap" id="rankTable">
+            {{ preview | safe }}
+        </div>
+    </section>
+
+</div>
+
+<div class="action-bar">
+    <a href="/predict-new" class="btn-ghost">← Score a Different File</a>
+    <div style="display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:12px;">
+        <a href="/predict-new/download/{{ filename|urlencode }}" class="btn-ghost" style="margin:0;">Download Full Results (CSV) ↓</a>
+        <a href="/report/download/{{ filename|urlencode }}" class="btn-ghost" id="reportBtn" style="margin:0;">Download Report (Excel) ↓</a>
+    </div>
+    <a href="/segmentation/{{ filename|urlencode }}" class="btn-primary">Continue to Segmentation →</a>
+</div>
+
+<script>
+    // Show the risk column as coloured capsules, like the dashboard
+    (function () {
+        const table = document.querySelector('#rankTable table');
+        if (!table) return;
+        const heads = Array.from(table.querySelectorAll('thead th'))
+            .map(th => th.textContent.trim().toLowerCase());
+        const col = heads.indexOf('risk_level');
+        if (col < 0) return;
+        table.querySelectorAll('tbody tr').forEach(tr => {
+            const td = tr.children[col];
+            if (!td) return;
+            const text = td.textContent.trim();
+            const l = text.toLowerCase();
+            const k = l.startsWith('high') ? 'high'
+                    : l.startsWith('med') ? 'medium'
+                    : l.startsWith('low') ? 'low' : '';
+            if (!k) return;
+            td.textContent = '';
+            const s = document.createElement('span');
+            s.className = 'tag-risk ' + k;
+            s.textContent = text;
+            td.appendChild(s);
+        });
+    })();
+
+    // Download Report: the first one can take a while (retention advice is
+    // created if it does not exist yet), so show a short "preparing" label.
+    document.getElementById('reportBtn').addEventListener('click', function () {
+        const b = this, label = b.textContent;
+        b.textContent = 'Preparing report... (up to a minute the first time)';
+        b.style.pointerEvents = 'none';
+        setTimeout(function () {
+            b.textContent = label;
+            b.style.pointerEvents = '';
+        }, 45000);
+    });
+</script>
+
+{% endblock %}

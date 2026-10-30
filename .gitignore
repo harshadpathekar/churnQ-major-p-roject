@@ -1,0 +1,15 @@
+uploads/
+data/
+venv/
+.env
+.DS_Store
+processed/
+!processed/
+processed/*
+!processed/active_model_*.joblib
+!processed/active_model_*.json
+!processed/active_model_*.npy
+!processed/active_model_*.dill
+__pycache__/
+*.pyc
+*.pyo

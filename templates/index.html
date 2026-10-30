@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Upload dataset · ChurnQ{% endblock %}
+{% block page_class %}page-bare{% endblock %}
+
+{% block content %}
+
+<div class="page-head hero">
+    <h1>Upload dataset</h1>
+    <span class="meta">Telecom customer churn prediction, powered by quantum computing</span>
+</div>
+
+<div class="bento">
+
+    <section class="tile tile-fade span-4">
+        <div class="tile-title">Customer file</div>
+
+        <form action="/upload" method="POST" enctype="multipart/form-data" class="form-plain">
+            <input
+                type="file"
+                name="dataset"
+                accept=".csv,.xlsx,.xls,.xlsm,.xlsb,.ods"
+                required>
+
+            <button type="submit" class="btn-primary">Upload file</button>
+        </form>
+    </section>
+
+    <section class="tile span-2">
+        <div class="tile-title">After you upload</div>
+        <ol class="timeline">
+            <li>Missing values and duplicate rows are cleaned, then you review unusual values.</li>
+            <li>Each customer is scored with the quantum model.</li>
+            <li>Customers are grouped by behaviour.</li>
+            <li>Risk, revenue and segments open in an interactive dashboard.</li>
+            <li>Each segment gets a retention plan.</li>
+        </ol>
+    </section>
+
+</div>
+
+{% endblock %}

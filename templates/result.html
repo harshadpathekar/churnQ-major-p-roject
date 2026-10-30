@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block title %}Dataset uploaded · ChurnQ{% endblock %}
+{% block page_class %}page-bare{% endblock %}
+
+{% block content %}
+
+<div class="stepper">
+    <div class="step done"><div class="dot">1</div><div class="step-label">Upload</div></div>
+    <div class="step done"><div class="dot">2</div><div class="step-label">Clean</div></div>
+    <div class="step"><div class="dot">3</div><div class="step-label">Anomaly Review</div></div>
+    <div class="step"><div class="dot">4</div><div class="step-label">Quantum Prediction</div></div>
+    <div class="step"><div class="dot">5</div><div class="step-label">Dashboard</div></div>
+</div>
+
+<div class="page-head">
+    <h1>Dataset uploaded</h1>
+    <span class="meta">{{ filename.rsplit('.', 1)[0] }} · cleaned and ready for anomaly review</span>
+</div>
+
+<style>
+    /* Class names are prefixed res- so base styles cannot clash. */
+    .res-card {
+        display: block !important;
+        height: auto !important; min-height: 0 !important;
+        max-height: none !important; overflow: visible !important;
+    }
+    .res-head {
+        display: flex; justify-content: space-between;
+        align-items: center; gap: 8px; flex-wrap: wrap;
+    }
+    .res-head .tile-title { margin: 0; }
+
+    .res-metrics {
+        display: grid; grid-template-columns: repeat(3, 1fr);
+        gap: 12px 14px; margin: 16px 0 0;
+        padding: 12px 14px;
+        background: var(--tile-hi); border: 1px solid var(--line-soft);
+        border-radius: var(--radius-sm);
+    }
+    .res-metrics .m-label { display: block; font-size: 12px; color: var(--text-2); }
+    .res-metrics .m-val {
+        display: block; font-size: 16px; font-weight: 600;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .res-rows { margin: 14px 0 0; padding: 0; list-style: none; }
+    .res-rows li {
+        display: flex; justify-content: space-between; gap: 12px;
+        padding: 9px 0; border-bottom: 1px solid var(--line-soft);
+    }
+    .res-rows li:last-child { border-bottom: 0; }
+    .res-rows .r-label { color: var(--text-2); }
+    .res-rows .r-val { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+    .res-preview { margin-top: 14px; overflow-x: auto; }
+
+    #loading-screen {
+        display: none; position: fixed; inset: 0; z-index: 999;
+        background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(4px);
+        align-items: center; justify-content: center; flex-direction: column;
+    }
+    #loading-screen .ld-title { margin-top: 20px; color: #4a63d6; font-weight: 600; }
+    #loading-screen .ld-sub { color: #8089a3; font-size: 13px; }
+
+    @media (max-width: 480px) { .res-metrics { grid-template-columns: repeat(2, 1fr); } }
+</style>
+
+<div class="bento">
+
+    <article class="tile span-6 res-card">
+        <div class="res-head">
+            <div class="tile-title">Dataset summary</div>
+        </div>
+        <div class="res-metrics">
+            <div><span class="m-label">Total rows</span><span class="m-val">{{ summary.rows }}</span></div>
+            <div><span class="m-label">Total columns</span><span class="m-val">{{ summary.columns }}</span></div>
+            <div>
+                <span class="m-label">Missing values</span>
+                <span class="m-val {{ 'status-bad' if summary.missing_values > 0 else 'status-good' }}">{{ summary.missing_values }}</span>
+            </div>
+            <div>
+                <span class="m-label">Duplicate rows</span>
+                <span class="m-val {{ 'status-bad' if summary.duplicates > 0 else 'status-good' }}">{{ summary.duplicates }}</span>
+            </div>
+            <div><span class="m-label">Numeric columns</span><span class="m-val">{{ summary.numeric_columns }}</span></div>
+            <div><span class="m-label">Categorical columns</span><span class="m-val">{{ summary.categorical_columns }}</span></div>
+        </div>
+    </article>
+
+    <article class="tile span-3 res-card">
+        <div class="res-head">
+            <div class="tile-title">Missing values</div>
+            <span class="tag-risk {{ 'low' if missing_report.missing_after == 0 else 'high' }}">
+                {{ 'Resolved' if missing_report.missing_after == 0 else 'Remaining' }}
+            </span>
+        </div>
+        <ul class="res-rows">
+            <li><span class="r-label">Before</span><span class="r-val">{{ missing_report.missing_before }}</span></li>
+            <li>
+                <span class="r-label">After</span>
+                <span class="r-val {{ 'status-good' if missing_report.missing_after == 0 else 'status-bad' }}">{{ missing_report.missing_after }}</span>
+            </li>
+            <li><span class="r-label">Handled</span><span class="r-val">{{ missing_report.handled_missing }}</span></li>
+        </ul>
+    </article>
+
+    <article class="tile span-3 res-card">
+        <div class="res-head">
+            <div class="tile-title">Duplicate rows</div>
+            <span class="tag-risk {{ 'low' if duplicates_report.duplicates_after == 0 else 'high' }}">
+                {{ 'Resolved' if duplicates_report.duplicates_after == 0 else 'Remaining' }}
+            </span>
+        </div>
+        <ul class="res-rows">
+            <li><span class="r-label">Before</span><span class="r-val">{{ duplicates_report.duplicates_before }}</span></li>
+            <li>
+                <span class="r-label">After</span>
+                <span class="r-val {{ 'status-good' if duplicates_report.duplicates_after == 0 else 'status-bad' }}">{{ duplicates_report.duplicates_after }}</span>
+            </li>
+            <li><span class="r-label">Removed</span><span class="r-val">{{ duplicates_report.duplicates_removed }}</span></li>
+        </ul>
+    </article>
+
+    <article class="tile span-6 res-card">
+        <div class="res-head">
+            <div class="tile-title">Processed dataset preview</div>
+            <span class="tag-src">First 10 rows</span>
+        </div>
+        <div class="res-preview preview-wrap">
+            {{ preview|safe }}
+        </div>
+    </article>
+
+</div>
+
+<div class="action-bar">
+    <a href="/" class="btn-ghost">← Upload Another Dataset</a>
+    <a href="/anomaly-review/{{ filename }}" class="btn-primary" onclick="showLoading()">Proceed to Anomaly Review →</a>
+</div>
+
+<div id="loading-screen">
+    <div class="loading-spinner"></div>
+    <p class="ld-title">Analyzing dataset with AI...</p>
+    <p class="ld-sub">This may take a few seconds for large datasets</p>
+</div>
+
+<script>
+    function showLoading() {
+        document.getElementById("loading-screen").style.display = "flex";
+    }
+</script>
+
+{% endblock %}

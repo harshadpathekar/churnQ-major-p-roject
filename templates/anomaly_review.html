@@ -1,0 +1,346 @@
+{% extends "base.html" %}
+
+{% block title %}Anomaly review · ChurnQ{% endblock %}
+{% block page_class %}page-bare{% endblock %}
+
+{% block content %}
+
+<div class="page-head">
+    <h1>Anomaly review</h1>
+    <span class="meta">{{ filename.rsplit('.', 1)[0] }} · choose what to do with unusual values before prediction</span>
+</div>
+
+<form action="/apply-actions/{{ filename }}" method="POST" class="form-plain">
+
+<div class="bento">
+
+    <section class="tile span-6">
+        <div class="metric-strip">
+            <div class="metric"><div class="v">{{ '{:,}'.format(total_records) }}</div><div class="l">Records</div></div>
+            <div class="metric"><div class="v">{{ anomaly_report | length }}</div><div class="l">Features with anomalies</div></div>
+            <div class="metric"><div class="v">{{ negative_report.columns | length }}</div><div class="l">Columns with negative values</div></div>
+            <div class="metric"><div class="v">{{ missing_id_report | length }}</div><div class="l">Records missing a customer ID</div></div>
+        </div>
+    </section>
+
+    <!-- Statistical anomalies -->
+    <section class="tile span-6">
+        <div class="tile-title">Statistical anomalies</div>
+
+        {% if anomaly_report %}
+        <div class="review-table-wrap">
+        <table class="review-table">
+            <thead>
+                <tr>
+                    <th>Feature</th>
+                    <th>Anomalies</th>
+                    <th>% Data</th>
+                    <th>AI Recommendation</th>
+                    <th>Reason</th>
+                    <th>Inspect</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for col, stats in anomaly_report.items() %}
+                <tr>
+                    <td><b>{{ col }}</b></td>
+                    <td>{{ stats.count }}</td>
+                    <td>{{ stats.percentage }}%</td>
+                    <td>
+                        <span class="badge
+                            {% if recommendations[col].recommendation == 'Retain Records' %}badge-green
+                            {% elif recommendations[col].recommendation == 'Adjust Values' %}badge-amber
+                            {% else %}badge-red
+                            {% endif %}">
+                            {{ recommendations[col].recommendation }}
+                        </span>
+                    </td>
+                    <td class="reason-text">{{ recommendations[col].reason }}</td>
+                    <td>
+                        <button
+                            type="button"
+                            class="btn-inspect"
+                            onclick="openInspect(this.dataset.col)"
+                            data-col="{{ col }}">
+                            👁 View
+                        </button>
+                    </td>
+                    <td>
+                        <select name="action_{{ col }}" class="action-select">
+                            <option value="Apply AI Recommendation">Apply AI Recommendation</option>
+                            <option value="Retain Records">Retain Records</option>
+                            <option value="Adjust Values">Adjust Values</option>
+                            <option value="Exclude Records">Exclude Records</option>
+                        </select>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+        {% else %}
+        <div class="no-anomalies">
+            <p>No statistical anomalies detected.</p>
+        </div>
+        {% endif %}
+    </section>
+
+    <!-- Negative values -->
+    <section class="tile span-6">
+        <div class="tile-title">Negative values detected</div>
+
+        {% if negative_report.columns %}
+
+        {% if negative_report.dataset_threshold_exceeded %}
+        <div class="threshold-warning">
+            <b>Data Quality Warning:</b>
+            This dataset contains <b>{{ negative_report.total_negatives }}</b>
+            negative values across numeric columns, which exceeds our 2%
+            quality threshold. This may indicate a data collection or export
+            error. You may proceed and handle them below, or
+            <a href="/">upload a cleaner dataset</a>.
+        </div>
+        {% endif %}
+
+        <p class="section-desc" style="margin-top: 12px;">
+            The following columns contain negative values.
+            Select an action for each column. It will be applied to
+            all negative values in that column.
+            Click <b>View</b> to inspect the affected records before deciding.
+        </p>
+
+        <div class="review-table-wrap">
+        <table class="review-table">
+            <thead>
+                <tr>
+                    <th>Column</th>
+                    <th>Negative Count</th>
+                    <th>% Data</th>
+                    <th>Column Status</th>
+                    <th>AI Suggestion</th>
+                    <th>Reason</th>
+                    <th>Inspect</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for col, stats in negative_report.columns.items() %}
+                <tr>
+                    <td><b>{{ col }}</b></td>
+                    <td>{{ stats.count }}</td>
+                    <td>{{ stats.percentage }}%</td>
+                    <td>
+                        {% if stats.column_threshold_exceeded %}
+                        <span class="badge badge-red">High Risk</span>
+                        {% else %}
+                        <span class="badge badge-amber">Moderate</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge
+                            {% if negative_recommendations[col].recommendation == 'Replace with Median' %}badge-amber
+                            {% elif negative_recommendations[col].recommendation == 'Replace with 0' %}badge-green
+                            {% else %}badge-red
+                            {% endif %}">
+                            {{ negative_recommendations[col].recommendation }}
+                        </span>
+                    </td>
+                    <td class="reason-text">
+                        {{ negative_recommendations[col].reason }}
+                    </td>
+                    <td>
+                        <button
+                            type="button"
+                            class="btn-inspect"
+                            onclick="openNegInspect(this.dataset.col)"
+                            data-col="{{ col }}">
+                            👁 View
+                        </button>
+                    </td>
+                    <td>
+                        <select name="neg_action_{{ col }}" class="action-select">
+                            <option value="Apply AI Recommendation">Apply AI Recommendation</option>
+                            <option value="Replace with Median">Replace with Median</option>
+                            <option value="Replace with 0">Replace with 0</option>
+                            <option value="Delete Rows">Delete Rows</option>
+                        </select>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+
+        {% else %}
+        <div class="no-anomalies">
+            <p>No negative values detected.</p>
+        </div>
+        {% endif %}
+    </section>
+
+    <!-- Missing customer IDs -->
+    {% if missing_id_report %}
+    <section class="tile span-6">
+        <div class="tile-title">Missing customer ID records</div>
+        <p class="section-desc" style="margin-top: 6px;">
+            The following records have missing Customer ID values.
+            Placeholder IDs have been assigned for reference.
+            Checked rows will be <b>retained</b>. Unchecked rows will be removed.
+        </p>
+
+        <div class="review-table-wrap">
+        <table class="review-table">
+            <thead>
+                <tr>
+                    <th>Placeholder ID</th>
+                    {% set first_missing = missing_id_report.values() | list | first %}
+                    {% for col in first_missing.row_data.keys() %}
+                    <th>{{ col }}</th>
+                    {% endfor %}
+                    <th>Retain</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row_key, data in missing_id_report.items() %}
+                <tr>
+                    <td>
+                        <span class="badge badge-amber">
+                            {{ data.placeholder_id }}
+                        </span>
+                    </td>
+                    {% for col, val in data.row_data.items() %}
+                    <td>{{ val }}</td>
+                    {% endfor %}
+                    <td>
+                        <input
+                            type="checkbox"
+                            name="retain_missing_id"
+                            value="{{ row_key }}"
+                            class="retain-checkbox"
+                        >
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </section>
+    {% endif %}
+
+</div>
+
+<div class="action-bar">
+    <a href="/" class="btn-ghost">← Upload Another</a>
+    <button type="submit" class="btn-primary">Continue Preprocessing →</button>
+</div>
+
+</form>
+
+<!-- Data for JavaScript: one tag each, no duplicates -->
+<script id="anomaly-data" type="application/json">
+{{ anomaly_report | tojson | safe }}
+</script>
+
+<script id="negative-data" type="application/json">
+{{ negative_report.columns | tojson | safe }}
+</script>
+
+{% endblock %}
+
+
+{% block outside_container %}
+<script>
+let anomalyData = {};
+let negativeData = {};
+
+try {
+    anomalyData = JSON.parse(
+        document.getElementById("anomaly-data").textContent
+    );
+} catch(e) {
+    console.error("Anomaly data parse error:", e.message);
+}
+
+try {
+    negativeData = JSON.parse(
+        document.getElementById("negative-data").textContent
+    );
+} catch(e) {
+    console.error("Negative data parse error:", e.message);
+}
+
+function openInspect(col) {
+    const stats = anomalyData[col];
+
+    if (!stats) {
+        console.error("No data found for column:", col);
+        return;
+    }
+
+    document.getElementById("popup-title").textContent =
+        "Inspect: " + col;
+
+    document.getElementById("popup-meta").textContent =
+        "Total Anomalies: " + stats.count +
+        "  |  Limits: [" + stats.lower_limit +
+        " — " + stats.upper_limit + "]";
+
+    const tbody = document.getElementById("popup-body");
+    tbody.innerHTML = "";
+
+    stats.records.forEach(function(rec) {
+        const tr = document.createElement("tr");
+        tr.innerHTML =
+            "<td>" + rec.customer_id + "</td>" +
+            "<td>" + rec.value + "</td>" +
+            "<td>" + rec.reason + "</td>";
+        tbody.appendChild(tr);
+    });
+
+    document.getElementById("inspect-overlay").style.display = "block";
+    document.getElementById("inspect-popup").style.display = "flex";
+    document.body.classList.add("popup-open");
+    document.querySelector(".popup-table-wrap").scrollTop = 0;
+}
+
+function openNegInspect(col) {
+    const stats = negativeData[col];
+
+    if (!stats) {
+        console.error("No negative data for column:", col);
+        return;
+    }
+
+    document.getElementById("popup-title").textContent =
+        "Negative Values: " + col;
+
+    document.getElementById("popup-meta").textContent =
+        "Total Negative Values: " + stats.count +
+        "  |  Column Median: " + stats.median_value;
+
+    const tbody = document.getElementById("popup-body");
+    tbody.innerHTML = "";
+
+    stats.records.forEach(function(rec) {
+        const tr = document.createElement("tr");
+        tr.innerHTML =
+            "<td>" + rec.customer_id + "</td>" +
+            "<td style='color:var(--accent)'>" + rec.value + "</td>" +
+            "<td>Negative Value</td>";
+        tbody.appendChild(tr);
+    });
+
+    document.getElementById("inspect-overlay").style.display = "block";
+    document.getElementById("inspect-popup").style.display = "flex";
+    document.body.classList.add("popup-open");
+    document.querySelector(".popup-table-wrap").scrollTop = 0;
+}
+
+function closeInspect() {
+    document.getElementById("inspect-overlay").style.display = "none";
+    document.getElementById("inspect-popup").style.display = "none";
+    document.body.classList.remove("popup-open");
+}
+</script>
+{% endblock %}

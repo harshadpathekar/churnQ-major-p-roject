@@ -1,0 +1,852 @@
+{% extends "base.html" %}
+
+{% block title %}Churn overview · ChurnQ{% endblock %}
+{% block page_class %}page-bare{% endblock %}
+
+{% block content %}
+
+{% set has_prob = payload.has_prob %}
+{% set kspan = 'span-2' if has_prob else 'span-3' %}
+{% set rspan = 'span-3' if has_prob else 'span-2' %}
+
+<div class="page-head">
+    <h1>Churn overview</h1>
+    <span class="meta">{{ filename.rsplit('.', 1)[0] }} · {{ '{:,}'.format(payload.total_rows) }} customers</span>
+</div>
+
+{% if payload.truncated %}
+<p class="notice-warn">
+    This file is large, so the dashboard shows the {{ payload.limit }}
+    highest-risk customers. Use the segmentation download for the full list.
+</p>
+{% endif %}
+
+<p class="d-hint">
+    Click any bar or slice to filter the whole dashboard, click it again to
+    clear. Use the filters below to narrow down further. Click a customer row
+    for details.
+</p>
+
+<style>
+    .d-hint { font-size: 15px; color: var(--text-2); margin: 0 10px 6px; max-width: none; }
+
+    /* Filters: an ink tile above the KPIs */
+    .filters {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 18px 28px;
+        margin-top: 12px;
+    }
+    .f-group.wide { grid-column: 1 / -1; }
+    .f-label { font-size: 13px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--text-2); margin-bottom: 10px; }
+    .f-label b { color: var(--on-dark); letter-spacing: 0; }
+    .range { display: flex; align-items: center; gap: 10px; color: var(--text-2); }
+    .range input[type=number] { width: 100px; padding: 9px 14px; }
+    input[type=range] { width: 100%; }
+
+    .active-bar {
+        display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+        margin: 16px 10px 0;
+    }
+    .active-bar .shown { font-weight: 600; margin-right: 6px; }
+    .active-bar .tag { background: var(--ink); color: var(--on-dark); }
+    .active-bar .tag:hover:not(:disabled) { background: var(--ink-hover); }
+
+    /* KPI tiles */
+    .kpi { display: flex; justify-content: space-between; align-items: center; gap: 16px; min-height: 230px; }
+    .kpi .big-num { margin: 10px 0 8px; }
+    .ring { flex: none; width: 150px; height: 150px; }
+    .ring-track { fill: none; stroke: var(--accent-track); stroke-width: 14; }
+    .ring-arc { fill: none; stroke: var(--on-dark); stroke-width: 14; stroke-linecap: round; }
+    .ring-text { font-size: 23px; font-weight: 600; fill: var(--on-dark); }
+    .rise { display: flex; align-items: flex-end; gap: 12px; height: 130px; flex: none; margin-right: 12px; }
+    .rise span { width: 20px; border-radius: 6px; background: var(--pista-ink); }
+    .stat-tile .big-num { margin: 10px 0 6px; }
+
+    /* Charts */
+    .chart-tile { position: relative; }
+    .chart-box { position: relative; height: 290px; }
+    .png-btn { position: absolute; top: 22px; right: 24px; padding: 4px 14px; font-size: 13px; color: var(--text-2); }
+
+    .chart-tile .tile-title, .chart-tile .hint { padding-right: 70px; }
+
+    /* Top at-risk list */
+    .top-list { list-style: none; margin: 8px 0 0; padding: 0; }
+    .top-list li {
+        display: grid; grid-template-columns: 44px minmax(120px, 1fr) minmax(120px, 1fr) auto;
+        align-items: center; gap: 16px; padding: 14px 10px;
+        border-bottom: 1px solid var(--line); cursor: pointer;
+        transition: background-color 150ms ease; font-size: 18px;
+    }
+    .top-list li:last-child { border-bottom: 0; }
+    .top-list li:hover { background: var(--hover); }
+    .top-list .seg { color: var(--text-2); }
+    .top-list .val { font-weight: 600; font-variant-numeric: tabular-nums; }
+    .rank {
+        width: 38px; height: 38px; border-radius: 10px; font-size: 15px; font-weight: 600;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .rank.high { background: var(--accent); color: var(--on-dark); }
+    .rank.medium { background: var(--accent-tag); color: var(--accent-ink); }
+    .rank.low { background: var(--pista-soft); color: var(--pista-ink); }
+
+    @media (max-width: 700px) {
+        .top-list li { grid-template-columns: 40px minmax(0, 1fr) auto; font-size: 16px; gap: 12px; }
+        .top-list .seg { display: none; }
+        .kpi { min-height: 0; }
+        .ring { width: 120px; height: 120px; }
+        .rise { height: 100px; margin-right: 0; }
+        .big-num { font-size: 48px; }
+    }
+
+    /* Customer table */
+    .tbl-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px; }
+    .tbl-tools { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+    .tbl-tools input[type=search] { padding: 10px 18px; min-width: 260px; border-radius: var(--radius-pill); }
+    #custTable th { cursor: pointer; user-select: none; white-space: nowrap; }
+    #custTable tbody tr { cursor: pointer; }
+    #custTable tbody tr.sel { background: var(--chip); }
+    .pager { display: flex; align-items: center; gap: 14px; margin-top: 16px; color: var(--text-2); }
+    .dot-seg { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 10px; }
+    .empty-note { padding: 16px; color: var(--text-2); }
+
+    #detail {
+        display: none; background: var(--tile-hi);
+        border-left: 5px solid var(--accent); border-radius: var(--radius-sm);
+        padding: 16px 20px; margin: 14px 0 0;
+    }
+    #detail dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px 22px; margin: 12px 0 0; }
+    #detail dt { font-size: 14px; color: var(--text-2); }
+    #detail dd { margin: 0; font-weight: 600; }
+</style>
+
+<section class="tile tile-ink filters" id="filters">
+    <div class="f-group wide">
+        <div class="f-label">Segment</div>
+        <div class="chips" id="chipSeg"></div>
+    </div>
+    <div class="f-group">
+        <div class="f-label">Risk level</div>
+        <div class="chips" id="chipRisk"></div>
+    </div>
+    <div class="f-group">
+        <div class="f-label">Contract</div>
+        <div class="chips" id="chipContract"></div>
+    </div>
+    <div class="f-group">
+        <div class="f-label">Tenure (months)</div>
+        <div class="range">
+            <input type="number" id="tMin" aria-label="Minimum tenure">
+            <span>to</span>
+            <input type="number" id="tMax" aria-label="Maximum tenure">
+        </div>
+    </div>
+    <div class="f-group">
+        <div class="f-label">Monthly charges</div>
+        <div class="range">
+            <input type="number" id="cMin" aria-label="Minimum monthly charges">
+            <span>to</span>
+            <input type="number" id="cMax" aria-label="Maximum monthly charges">
+        </div>
+    </div>
+    {% if has_prob %}
+    <div class="f-group">
+        <div class="f-label">Minimum churn probability: <b id="pMinLabel">0%</b></div>
+        <input type="range" id="pMin" min="0" max="100" step="5" value="0">
+    </div>
+    {% endif %}
+</section>
+
+<div class="active-bar">
+    <span class="shown" id="shownLabel"></span>
+    <span id="activeChips"></span>
+    <button type="button" class="reset-btn" id="resetBtn" hidden>Reset all filters</button>
+</div>
+
+<div class="bento">
+
+    <!-- Row 1: likely to leave / staying -->
+    <div class="tile tile-orange span-3 kpi">
+        <div>
+            <div class="tile-label">Likely to leave</div>
+            <div class="big-num" id="kChurn">-</div>
+            <div class="tile-cap">customers predicted to churn</div>
+        </div>
+        <svg class="ring" viewBox="0 0 120 120" role="img" aria-label="Share of customers likely to leave">
+            <circle class="ring-track" cx="60" cy="60" r="46"></circle>
+            <circle class="ring-arc" id="ringArc" cx="60" cy="60" r="46" transform="rotate(-90 60 60)"></circle>
+            <text class="ring-text" id="ringPct" x="60" y="67" text-anchor="middle">0%</text>
+        </svg>
+    </div>
+
+    <div class="tile tile-green span-3 kpi">
+        <div>
+            <div class="tile-label">Staying</div>
+            <div class="big-num" id="kStay">-</div>
+            <div class="tile-cap">customers predicted to stay</div>
+        </div>
+        <div class="rise" aria-hidden="true">
+            <span style="height: 36%; opacity: .35"></span>
+            <span style="height: 48%; opacity: .48"></span>
+            <span style="height: 60%; opacity: .62"></span>
+            <span style="height: 74%; opacity: .76"></span>
+            <span style="height: 88%; opacity: .88"></span>
+            <span style="height: 100%; opacity: 1"></span>
+        </div>
+    </div>
+
+    <!-- Row 2: segments / risk -->
+    <div class="tile span-4 chart-tile">
+        <div class="tile-title">Customers per segment</div>
+        <p class="hint">Each customer belongs to exactly one segment.</p>
+        <button type="button" class="btn-sm png-btn" data-chart="segmentChart">PNG</button>
+        <div class="chart-box"><canvas id="segmentChart"></canvas></div>
+    </div>
+
+    <div class="tile span-2 chart-tile">
+        <div class="tile-title">Customers by risk level</div>
+        <p class="hint">High is 66% and above, Medium 33&ndash;66%, Low below 33%.</p>
+        <button type="button" class="btn-sm png-btn" data-chart="riskChart">PNG</button>
+        <div class="chart-box"><canvas id="riskChart"></canvas></div>
+    </div>
+
+    <!-- Row 3: key numbers -->
+    {% if has_prob %}
+    <div class="tile {{ kspan }} stat-tile">
+        <div class="tile-label">Average churn probability</div>
+        <div class="big-num sm" id="kProb">-</div>
+        <div class="tile-cap" id="kProbCap">across the customers shown</div>
+    </div>
+    {% endif %}
+
+    <div class="tile tile-salmon {{ kspan }} stat-tile">
+        <div class="tile-label">Monthly revenue at risk</div>
+        <div class="big-num sm" id="kRev">-</div>
+        <div class="tile-cap" id="kRevCap">monthly charges of likely churners</div>
+    </div>
+
+    <div class="tile tile-ink {{ kspan }} stat-tile">
+        <div class="tile-label">High-risk customers</div>
+        <div class="big-num sm num-churn" id="kHigh">-</div>
+        <div class="tile-cap" id="kHighCap">of the customers shown</div>
+    </div>
+
+    <!-- Row 4: revenue, probability -->
+    <div class="tile {{ rspan }} chart-tile">
+        <div class="tile-title">Monthly revenue at risk by segment</div>
+        <p class="hint">Monthly charges of customers predicted to churn.</p>
+        <button type="button" class="btn-sm png-btn" data-chart="revenueChart">PNG</button>
+        <div class="chart-box"><canvas id="revenueChart"></canvas></div>
+    </div>
+
+    {% if has_prob %}
+    <div class="tile span-3 chart-tile">
+        <div class="tile-title">Average churn probability by segment</div>
+        <p class="hint">How risky each segment is on average.</p>
+        <button type="button" class="btn-sm png-btn" data-chart="segProbChart">PNG</button>
+        <div class="chart-box"><canvas id="segProbChart"></canvas></div>
+    </div>
+
+    <div class="tile span-2 chart-tile">
+        <div class="tile-title">Spread of churn probability</div>
+        <p class="hint">Click a bar to focus on that probability range.</p>
+        <button type="button" class="btn-sm png-btn" data-chart="histChart">PNG</button>
+        <div class="chart-box"><canvas id="histChart"></canvas></div>
+    </div>
+    {% endif %}
+
+    <div class="tile span-2 chart-tile">
+        <div class="tile-title">Predicted churn rate by contract</div>
+        <p class="hint">Share of customers on each contract predicted to churn.</p>
+        <button type="button" class="btn-sm png-btn" data-chart="contractChart">PNG</button>
+        <div class="chart-box"><canvas id="contractChart"></canvas></div>
+    </div>
+
+    <div class="tile span-2 chart-tile">
+        <div class="tile-title">{% if has_prob %}Average churn probability{% else %}Predicted churn rate{% endif %} by tenure</div>
+        <p class="hint">Newer customers usually carry more risk.</p>
+        <button type="button" class="btn-sm png-btn" data-chart="tenureChart">PNG</button>
+        <div class="chart-box"><canvas id="tenureChart"></canvas></div>
+    </div>
+
+    <!-- Row 5: top at-risk customers -->
+    <div class="tile span-6">
+        <div class="tile-title">Top at-risk customers</div>
+        <p class="hint">{% if has_prob %}Highest churn probability{% else %}Highest monthly charges{% endif %} among the customers shown. Click a row for details.</p>
+        <ol class="top-list" id="topList"></ol>
+    </div>
+
+    <!-- Row 6: customer table -->
+    <div class="tile span-6">
+        <div class="tbl-head">
+            <div>
+                <div class="tile-title">All customers</div>
+                <span class="d-hint" id="tblCount" style="margin:0;"></span>
+            </div>
+            <div class="tbl-tools">
+                <input type="search" id="q" placeholder="Search customer ID">
+                <button type="button" class="btn-sm" id="csvBtn">Download filtered list (CSV) ↓</button>
+            </div>
+        </div>
+
+        <div id="detail">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <b id="detailTitle"></b>
+                <button type="button" class="btn-sm" id="detailClose">Close</button>
+            </div>
+            <dl id="detailList"></dl>
+        </div>
+
+        <div class="review-table-wrap">
+            <table class="table" id="custTable">
+                <thead><tr id="tblHead"></tr></thead>
+                <tbody id="tblBody"></tbody>
+            </table>
+        </div>
+
+        <div class="pager">
+            <button type="button" class="btn-sm" id="prevBtn">← Previous</button>
+            <span id="pageLbl"></span>
+            <button type="button" class="btn-sm" id="nextBtn">Next →</button>
+        </div>
+    </div>
+
+</div>
+
+<div class="action-bar">
+    <a href="/segmentation/{{ filename }}" class="btn-ghost">← Back to Segmentation</a>
+    <a href="/segmentation/download/{{ filename }}" class="btn-ghost">Download Segments (CSV) ↓</a>
+    <a href="/predict-new" class="btn-ghost">Score Another File</a>
+    <a href="/retention/{{ filename }}" class="btn-primary">Retention Strategy →</a>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+(function () {
+    const P = {{ payload | tojson }};
+    const C = P.cols;
+    const N = C.id.length;
+    const HAS_PROB = P.has_prob;
+    const HAS_CHART = typeof Chart !== 'undefined';
+
+    // ---- colours come from the CSS variables in style.css ------------
+    const V = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    const INK = V('--ink'), ONDARK = V('--on-dark'), TEXT2 = V('--text-2'), TILE = V('--tile');
+    const BASE = V('--chart-base');
+    const SEG_COLORS = {
+        'Premium': V('--seg-premium'),
+        'At-Risk Loyal': V('--seg-atrisk-loyal'),
+        'Churner - Price Sensitive': V('--seg-price'),
+        'Churner - Disengaged': V('--seg-disengaged'),
+        'New Customer': V('--seg-new'),
+        'Stable Low-Value': V('--seg-stable')
+    };
+    const RISK_COLORS = { High: V('--risk-high'), Medium: V('--risk-medium'), Low: V('--risk-low') };
+    // Dark text on light colours, light text on dark ones
+    function onColor(hex) {
+        const n = parseInt(hex.slice(1, 7), 16);
+        const lum = (0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
+        return lum > 0.62 ? INK : ONDARK;
+    }
+
+    const SEGMENTS = P.segments;
+    const RISKS = ['High', 'Medium', 'Low'];
+    const RISK_RANK = { High: 0, Medium: 1, Low: 2 };
+    const CONTRACTS = Array.from(new Set(C.contract)).sort();
+    const TB_LABELS = ['0-6 mo', '7-12 mo', '13-24 mo', '25-48 mo', '49+ mo'];
+    const PB_LABELS = [];
+    for (let b = 0; b < 10; b++) PB_LABELS.push((b * 10) + '-' + ((b + 1) * 10) + '%');
+
+    const $ = id => document.getElementById(id);
+    const fmt = n => Math.round(n).toLocaleString();
+    const r1 = x => Math.round(x * 10) / 10;
+
+    // ---- derived per-row bands --------------------------------------
+    const TB = C.tenure.map(t => t <= 6 ? 0 : t <= 12 ? 1 : t <= 24 ? 2 : t <= 48 ? 3 : 4);
+    const PB = HAS_PROB ? C.prob.map(p => Math.min(9, Math.floor(p * 10))) : [];
+
+    function minMax(arr) {
+        let lo = Infinity, hi = -Infinity;
+        for (let i = 0; i < arr.length; i++) {
+            if (arr[i] < lo) lo = arr[i];
+            if (arr[i] > hi) hi = arr[i];
+        }
+        return N ? [lo, hi] : [0, 0];
+    }
+    const [T_LO, T_HI0] = minMax(C.tenure);
+    const [C_LO0, C_HI0] = minMax(C.charge);
+    const T_HI = T_HI0;
+    const C_LO = Math.floor(C_LO0), C_HI = Math.ceil(C_HI0);
+
+    // ---- filter state -----------------------------------------------
+    const S = {
+        seg: new Set(), risk: new Set(), contract: new Set(),
+        tband: new Set(), pbin: new Set(),
+        tMin: T_LO, tMax: T_HI, cMin: C_LO, cMax: C_HI, pMin: 0, q: ''
+    };
+
+    function toggle(set, key) {
+        if (set.has(key)) set.delete(key); else set.add(key);
+    }
+
+    // `except` names a dimension whose own selection is ignored, so a
+    // chart keeps showing all of its categories while highlighting the
+    // selected ones (same behaviour as Power BI cross-highlighting).
+    function passes(i, except) {
+        if (except !== 'seg' && S.seg.size && !S.seg.has(C.seg[i])) return false;
+        if (except !== 'risk' && S.risk.size && !S.risk.has(C.risk[i])) return false;
+        if (except !== 'contract' && S.contract.size && !S.contract.has(C.contract[i])) return false;
+        if (except !== 'tband' && S.tband.size && !S.tband.has(TB[i])) return false;
+        if (except !== 'pbin' && S.pbin.size && !S.pbin.has(PB[i])) return false;
+        if (C.tenure[i] < S.tMin || C.tenure[i] > S.tMax) return false;
+        if (C.charge[i] < S.cMin || C.charge[i] > S.cMax) return false;
+        if (HAS_PROB && C.prob[i] < S.pMin / 100) return false;
+        return true;
+    }
+    function rowsWhere(except) {
+        const out = [];
+        for (let i = 0; i < N; i++) if (passes(i, except)) out.push(i);
+        return out;
+    }
+
+    // ---- slicers ----------------------------------------------------
+    function buildChips(containerId, items, set, colorMap) {
+        const el = $(containerId);
+        items.forEach(item => {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'chip';
+            b.textContent = item;
+            b.dataset.key = item;
+            if (colorMap && colorMap[item]) {
+                b.style.setProperty('--c', colorMap[item]);
+                b.style.setProperty('--c-ink', onColor(colorMap[item]));
+            }
+            b.addEventListener('click', () => { toggle(set, item); render(); });
+            el.appendChild(b);
+        });
+    }
+    function syncChips(containerId, set) {
+        $(containerId).querySelectorAll('.chip').forEach(b =>
+            b.classList.toggle('on', set.has(b.dataset.key)));
+    }
+    buildChips('chipSeg', SEGMENTS, S.seg, SEG_COLORS);
+    buildChips('chipRisk', RISKS, S.risk, RISK_COLORS);
+    buildChips('chipContract', CONTRACTS, S.contract, null);
+
+    function syncInputs() {
+        $('tMin').value = S.tMin; $('tMax').value = S.tMax;
+        $('cMin').value = S.cMin; $('cMax').value = S.cMax;
+        if (HAS_PROB) {
+            $('pMin').value = S.pMin;
+            $('pMinLabel').textContent = S.pMin + '%';
+        }
+    }
+    function bindNum(id, key, def) {
+        $(id).addEventListener('input', e => {
+            const v = parseFloat(e.target.value);
+            S[key] = isNaN(v) ? def : v;
+            render();
+        });
+    }
+    bindNum('tMin', 'tMin', T_LO); bindNum('tMax', 'tMax', T_HI);
+    bindNum('cMin', 'cMin', C_LO); bindNum('cMax', 'cMax', C_HI);
+    if (HAS_PROB) {
+        $('pMin').addEventListener('input', e => {
+            S.pMin = parseInt(e.target.value, 10) || 0;
+            render();
+        });
+    }
+    $('q').addEventListener('input', e => { S.q = e.target.value.trim(); T.page = 0; renderTable(); });
+    $('resetBtn').addEventListener('click', () => {
+        S.seg.clear(); S.risk.clear(); S.contract.clear(); S.tband.clear(); S.pbin.clear();
+        S.tMin = T_LO; S.tMax = T_HI; S.cMin = C_LO; S.cMax = C_HI; S.pMin = 0;
+        render();
+    });
+
+    // ---- charts -----------------------------------------------------
+    const charts = {};
+    const hover = (e, els) => { e.native.target.style.cursor = els.length ? 'pointer' : 'default'; };
+    const noLegend = { legend: { display: false } };
+    const pctTip = {
+        callbacks: {
+            label: ctx => ' ' + (ctx.chart.options.indexAxis === 'y' ? ctx.parsed.x : ctx.parsed.y) + '%'
+        }
+    };
+    const pctAxis = { ticks: { color: TEXT2, callback: v => v + '%' } };
+
+    // No gridline boxes: both axes are drawn without grid or border lines
+    const catAxis = { grid: { display: false }, border: { display: false }, ticks: { color: TEXT2 } };
+    function valAxis(extra) {
+        return Object.assign({
+            beginAtZero: true,
+            grid: { display: false }, border: { display: false }, ticks: { color: TEXT2 }
+        }, extra || {});
+    }
+    function axes(horizontal, extra) {
+        return horizontal ? { x: valAxis(extra), y: catAxis } : { x: catAxis, y: valAxis(extra) };
+    }
+
+    function dim(base, keys, set) {
+        return set.size ? base.map((c, i) => set.has(keys[i]) ? c : c + '4d') : base;
+    }
+
+    function mk(id, type, labels, opts, keysFn, dimKey) {
+        const ds = { data: labels.map(() => 0), backgroundColor: [] };
+        if (type === 'bar') { ds.borderRadius = 6; ds.borderSkipped = false; ds.maxBarThickness = 26; }
+        if (type === 'doughnut') { ds.borderWidth = 3; ds.borderColor = TILE; }
+        const cfg = {
+            type: type,
+            data: { labels: labels, datasets: [ds] },
+            options: Object.assign({
+                onHover: hover,
+                onClick: (evt, els) => {
+                    if (!els.length) return;
+                    toggle(S[dimKey], keysFn(els[0].index));
+                    render();
+                }
+            }, opts)
+        };
+        charts[id] = new Chart($(id), cfg);
+    }
+
+    if (HAS_CHART) {
+        Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
+        Chart.defaults.font.size = 14;
+        Chart.defaults.color = TEXT2;
+        Chart.defaults.maintainAspectRatio = false;
+        // No animation: charts are updated instantly on every filter change
+        // (an update during the start-up animation leaves bars unpainted).
+        Chart.defaults.animation = false;
+        Chart.defaults.plugins.tooltip.backgroundColor = INK;
+        Chart.defaults.plugins.tooltip.titleColor = ONDARK;
+        Chart.defaults.plugins.tooltip.bodyColor = ONDARK;
+        Chart.defaults.plugins.tooltip.cornerRadius = 12;
+        Chart.defaults.plugins.tooltip.padding = 10;
+
+        mk('riskChart', 'doughnut', RISKS,
+           { cutout: '66%', plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 10, padding: 18 } } } },
+           i => RISKS[i], 'risk');
+        mk('segmentChart', 'bar', SEGMENTS,
+           { indexAxis: 'y', plugins: noLegend, scales: axes(true) }, i => SEGMENTS[i], 'seg');
+        mk('revenueChart', 'bar', SEGMENTS,
+           { indexAxis: 'y', plugins: noLegend, scales: axes(true) }, i => SEGMENTS[i], 'seg');
+        if (HAS_PROB) {
+            mk('segProbChart', 'bar', SEGMENTS,
+               { indexAxis: 'y', plugins: { legend: { display: false }, tooltip: pctTip }, scales: axes(true, pctAxis) },
+               i => SEGMENTS[i], 'seg');
+            mk('histChart', 'bar', PB_LABELS,
+               { plugins: noLegend, scales: axes(false) }, i => i, 'pbin');
+        }
+        mk('contractChart', 'bar', CONTRACTS,
+           { plugins: { legend: { display: false }, tooltip: pctTip }, scales: axes(false, pctAxis) },
+           i => CONTRACTS[i], 'contract');
+        mk('tenureChart', 'bar', TB_LABELS,
+           { plugins: { legend: { display: false }, tooltip: pctTip }, scales: axes(false, pctAxis) },
+           i => i, 'tband');
+
+        document.querySelectorAll('.png-btn').forEach(b => b.addEventListener('click', () => {
+            const ch = Chart.getChart(b.dataset.chart);
+            if (!ch) return;
+            const a = document.createElement('a');
+            a.href = ch.toBase64Image();
+            a.download = b.dataset.chart + '.png';
+            a.click();
+        }));
+    } else {
+        document.querySelectorAll('.chart-box').forEach(b => {
+            b.innerHTML = '<p class="d-hint">Charts could not load (Chart.js needs an internet connection). Filters and the customer table still work.</p>';
+        });
+    }
+
+    function setChart(id, data, baseColors, keys, set) {
+        const ch = charts[id];
+        if (!ch) return;
+        ch.data.datasets[0].data = data;
+        ch.data.datasets[0].backgroundColor = dim(baseColors, keys, set);
+        ch.update('none');
+    }
+
+    // ---- table ------------------------------------------------------
+    const COLS = [{ k: 'id', label: 'Customer' }, { k: 'seg', label: 'Segment' },
+                  { k: 'tenure', label: 'Tenure (mo)' }, { k: 'charge', label: 'Monthly charges' },
+                  { k: 'contract', label: 'Contract' }, { k: 'services', label: 'Add-on services' }];
+    if (HAS_PROB) COLS.push({ k: 'prob', label: 'Churn probability' });
+    COLS.push({ k: 'risk', label: 'Risk' });
+
+    const T = { sort: HAS_PROB ? 'prob' : 'charge', dir: -1, page: 0, size: 20, sel: -1 };
+
+    function val(k, i) { return k === 'risk' ? (RISK_RANK[C.risk[i]] ?? 9) : C[k][i]; }
+
+    function tableIdx() {
+        let idx = rowsWhere(null);
+        if (S.q) {
+            const q = S.q.toLowerCase();
+            idx = idx.filter(i => C.id[i].toLowerCase().includes(q));
+        }
+        const k = T.sort;
+        idx.sort((a, b) => {
+            const x = val(k, a), y = val(k, b);
+            const c = (typeof x === 'string') ? x.localeCompare(y) : x - y;
+            return c * T.dir;
+        });
+        return idx;
+    }
+
+    function cell(td, k, i) {
+        if (k === 'seg') {
+            const d = document.createElement('span');
+            d.className = 'dot-seg';
+            d.style.background = SEG_COLORS[C.seg[i]] || TEXT2;
+            td.appendChild(d);
+            td.appendChild(document.createTextNode(C.seg[i]));
+        } else if (k === 'risk') {
+            const p = document.createElement('span');
+            p.className = 'tag-risk ' + String(C.risk[i]).toLowerCase();
+            p.textContent = C.risk[i];
+            td.appendChild(p);
+        } else if (k === 'prob') {
+            td.textContent = (C.prob[i] * 100).toFixed(1) + '%';
+        } else if (k === 'charge') {
+            td.textContent = C.charge[i].toFixed(2);
+        } else {
+            td.textContent = C[k][i];
+        }
+    }
+
+    function renderTable() {
+        const head = $('tblHead');
+        head.innerHTML = '';
+        COLS.forEach(c => {
+            const th = document.createElement('th');
+            th.textContent = c.label + (T.sort === c.k ? (T.dir > 0 ? ' ▲' : ' ▼') : '');
+            th.addEventListener('click', () => {
+                if (T.sort === c.k) T.dir = -T.dir; else { T.sort = c.k; T.dir = (c.k === 'id' || c.k === 'seg' || c.k === 'contract' || c.k === 'risk') ? 1 : -1; }
+                T.page = 0;
+                renderTable();
+            });
+            head.appendChild(th);
+        });
+
+        const idx = tableIdx();
+        const pages = Math.max(1, Math.ceil(idx.length / T.size));
+        if (T.page >= pages) T.page = pages - 1;
+        const slice = idx.slice(T.page * T.size, (T.page + 1) * T.size);
+
+        const body = $('tblBody');
+        body.innerHTML = '';
+        if (!slice.length) {
+            const tr = document.createElement('tr');
+            const td = document.createElement('td');
+            td.colSpan = COLS.length;
+            td.className = 'empty-note';
+            td.textContent = 'No customers match the current filters.';
+            tr.appendChild(td);
+            body.appendChild(tr);
+        }
+        slice.forEach(i => {
+            const tr = document.createElement('tr');
+            if (i === T.sel) tr.className = 'sel';
+            COLS.forEach(c => { const td = document.createElement('td'); cell(td, c.k, i); tr.appendChild(td); });
+            tr.addEventListener('click', () => { T.sel = i; showDetail(i); renderTable(); });
+            body.appendChild(tr);
+        });
+
+        $('tblCount').textContent = fmt(idx.length) + ' customers match';
+        $('pageLbl').textContent = 'Page ' + (T.page + 1) + ' of ' + pages;
+        $('prevBtn').disabled = T.page === 0;
+        $('nextBtn').disabled = T.page >= pages - 1;
+    }
+    $('prevBtn').addEventListener('click', () => { T.page--; renderTable(); });
+    $('nextBtn').addEventListener('click', () => { T.page++; renderTable(); });
+
+    function showDetail(i) {
+        $('detailTitle').textContent = 'Customer ' + C.id[i];
+        const rows = [['Segment', C.seg[i]], ['Risk level', C.risk[i]],
+                      ['Predicted to churn', C.churn[i] ? 'Yes' : 'No']];
+        if (HAS_PROB) rows.push(['Churn probability', (C.prob[i] * 100).toFixed(1) + '%']);
+        rows.push(['Tenure', C.tenure[i] + ' months'], ['Monthly charges', C.charge[i].toFixed(2)],
+                  ['Contract', C.contract[i]], ['Add-on services', C.services[i]]);
+        const dl = $('detailList');
+        dl.innerHTML = '';
+        rows.forEach(r => {
+            const wrap = document.createElement('div');
+            const dt = document.createElement('dt'); dt.textContent = r[0];
+            const dd = document.createElement('dd'); dd.textContent = r[1];
+            wrap.appendChild(dt); wrap.appendChild(dd); dl.appendChild(wrap);
+        });
+        $('detail').style.display = 'block';
+    }
+    $('detailClose').addEventListener('click', () => { T.sel = -1; $('detail').style.display = 'none'; renderTable(); });
+
+    $('csvBtn').addEventListener('click', () => {
+        const esc = s => '"' + String(s).replace(/"/g, '""') + '"';
+        const header = ['customer_id', 'segment', 'tenure', 'monthly_charges', 'contract',
+                        'add_on_services'].concat(HAS_PROB ? ['churn_probability'] : [])
+                        .concat(['risk_level', 'predicted_churn']);
+        const lines = [header.join(',')];
+        tableIdx().forEach(i => {
+            const row = [esc(C.id[i]), esc(C.seg[i]), C.tenure[i], C.charge[i], esc(C.contract[i]), C.services[i]];
+            if (HAS_PROB) row.push(C.prob[i]);
+            row.push(esc(C.risk[i]), C.churn[i] ? 'Yes' : 'No');
+            lines.push(row.join(','));
+        });
+        const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'filtered_customers.csv';
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    });
+
+    // ---- top at-risk list -------------------------------------------
+    function renderTop(rows) {
+        const list = $('topList');
+        list.innerHTML = '';
+        const ranked = rows.slice().sort((a, b) =>
+            HAS_PROB ? C.prob[b] - C.prob[a] : C.charge[b] - C.charge[a]).slice(0, 5);
+        if (!ranked.length) {
+            const li = document.createElement('li');
+            li.className = 'empty-note';
+            li.style.display = 'block';
+            li.textContent = 'No customers match the current filters.';
+            list.appendChild(li);
+            return;
+        }
+        ranked.forEach((i, k) => {
+            const li = document.createElement('li');
+            const rank = document.createElement('span');
+            rank.className = 'rank ' + String(C.risk[i]).toLowerCase();
+            rank.textContent = k + 1;
+            const id = document.createElement('span');
+            id.textContent = C.id[i];
+            const seg = document.createElement('span');
+            seg.className = 'seg';
+            seg.textContent = C.seg[i];
+            const v = document.createElement('span');
+            v.className = 'val';
+            v.textContent = HAS_PROB ? (C.prob[i] * 100).toFixed(1) + '%' : C.charge[i].toFixed(2);
+            [rank, id, seg, v].forEach(el => li.appendChild(el));
+            li.addEventListener('click', () => { T.sel = i; showDetail(i); renderTable(); });
+            list.appendChild(li);
+        });
+    }
+
+    // ---- active filter tags ----------------------------------------
+    function renderActive() {
+        const box = $('activeChips');
+        box.innerHTML = '';
+        const add = (text, fn) => {
+            const b = document.createElement('button');
+            b.type = 'button'; b.className = 'tag'; b.textContent = text + ' ×';
+            b.addEventListener('click', fn);
+            box.appendChild(b); box.appendChild(document.createTextNode(' '));
+        };
+        S.seg.forEach(v => add('Segment: ' + v, () => { S.seg.delete(v); render(); }));
+        S.risk.forEach(v => add('Risk: ' + v, () => { S.risk.delete(v); render(); }));
+        S.contract.forEach(v => add('Contract: ' + v, () => { S.contract.delete(v); render(); }));
+        S.tband.forEach(v => add('Tenure: ' + TB_LABELS[v], () => { S.tband.delete(v); render(); }));
+        S.pbin.forEach(v => add('Probability: ' + PB_LABELS[v], () => { S.pbin.delete(v); render(); }));
+        if (S.tMin !== T_LO || S.tMax !== T_HI)
+            add('Tenure ' + S.tMin + '-' + S.tMax, () => { S.tMin = T_LO; S.tMax = T_HI; render(); });
+        if (S.cMin !== C_LO || S.cMax !== C_HI)
+            add('Charges ' + S.cMin + '-' + S.cMax, () => { S.cMin = C_LO; S.cMax = C_HI; render(); });
+        if (S.pMin > 0)
+            add('Probability ≥ ' + S.pMin + '%', () => { S.pMin = 0; render(); });
+        $('resetBtn').hidden = !box.querySelector('.tag');
+    }
+
+    // ---- main render ------------------------------------------------
+    const RING = 2 * Math.PI * 46;
+
+    function render() {
+        // KPIs use every active filter
+        const all = rowsWhere(null);
+        let churn = 0, high = 0, probSum = 0, rev = 0, totRev = 0;
+        all.forEach(i => {
+            if (C.churn[i]) { churn++; rev += C.charge[i]; }
+            if (C.risk[i] === 'High') high++;
+            if (HAS_PROB) probSum += C.prob[i];
+            totRev += C.charge[i];
+        });
+        const n = all.length;
+        const pct = (a, b) => b ? r1(100 * a / b) : 0;
+
+        $('kChurn').textContent = fmt(churn);
+        $('kStay').textContent = fmt(n - churn);
+        const cp = pct(churn, n);
+        $('ringPct').textContent = Math.round(cp) + '%';
+        const arc = $('ringArc');
+        arc.style.display = cp > 0 ? '' : 'none';
+        arc.setAttribute('stroke-dasharray', (cp / 100 * RING) + ' ' + RING);
+
+        $('kHigh').textContent = fmt(high);
+        $('kHighCap').textContent = pct(high, n) + '% of the customers shown';
+        if (HAS_PROB) {
+            $('kProb').textContent = n ? r1(100 * probSum / n) + '%' : '-';
+            $('kProbCap').textContent = 'across ' + fmt(n) + ' customers shown';
+        }
+        $('kRev').textContent = fmt(rev);
+        $('kRevCap').textContent = 'monthly charges of likely churners (' + pct(rev, totRev) + '% of total)';
+        $('shownLabel').textContent = 'Showing ' + fmt(n) + ' of ' + fmt(N) + ' customers';
+
+        syncChips('chipSeg', S.seg); syncChips('chipRisk', S.risk); syncChips('chipContract', S.contract);
+        syncInputs();
+        renderActive();
+
+        if (HAS_CHART) {
+            // risk
+            const rc = { High: 0, Medium: 0, Low: 0 };
+            rowsWhere('risk').forEach(i => { if (C.risk[i] in rc) rc[C.risk[i]]++; });
+            setChart('riskChart', RISKS.map(r => rc[r]), RISKS.map(r => RISK_COLORS[r]), RISKS, S.risk);
+
+            // segments
+            const sCount = {}, sRev = {}, sProb = {};
+            SEGMENTS.forEach(s => { sCount[s] = 0; sRev[s] = 0; sProb[s] = 0; });
+            rowsWhere('seg').forEach(i => {
+                const s = C.seg[i];
+                if (!(s in sCount)) return;
+                sCount[s]++;
+                if (C.churn[i]) sRev[s] += C.charge[i];
+                if (HAS_PROB) sProb[s] += C.prob[i];
+            });
+            const segBase = SEGMENTS.map(s => SEG_COLORS[s]);
+            setChart('segmentChart', SEGMENTS.map(s => sCount[s]), segBase, SEGMENTS, S.seg);
+            setChart('revenueChart', SEGMENTS.map(s => Math.round(sRev[s])), segBase, SEGMENTS, S.seg);
+            if (HAS_PROB) {
+                setChart('segProbChart', SEGMENTS.map(s => sCount[s] ? r1(100 * sProb[s] / sCount[s]) : 0),
+                         segBase, SEGMENTS, S.seg);
+                const bins = new Array(10).fill(0);
+                rowsWhere('pbin').forEach(i => { bins[PB[i]]++; });
+                setChart('histChart', bins, PB_LABELS.map(() => BASE), [0,1,2,3,4,5,6,7,8,9], S.pbin);
+            }
+
+            // contract: predicted churn rate
+            const kc = {}, kn = {};
+            CONTRACTS.forEach(c => { kc[c] = 0; kn[c] = 0; });
+            rowsWhere('contract').forEach(i => { kn[C.contract[i]]++; if (C.churn[i]) kc[C.contract[i]]++; });
+            setChart('contractChart', CONTRACTS.map(c => kn[c] ? r1(100 * kc[c] / kn[c]) : 0),
+                     CONTRACTS.map(() => BASE), CONTRACTS, S.contract);
+
+            // tenure bands
+            const tn = [0,0,0,0,0], ts = [0,0,0,0,0];
+            rowsWhere('tband').forEach(i => { tn[TB[i]]++; ts[TB[i]] += HAS_PROB ? C.prob[i] : C.churn[i]; });
+            setChart('tenureChart', tn.map((c, b) => c ? r1(100 * ts[b] / c) : 0),
+                     TB_LABELS.map(() => BASE), [0,1,2,3,4], S.tband);
+        }
+
+        renderTop(all);
+        T.page = 0;
+        renderTable();
+    }
+
+    render();
+
+    // Redraw charts once Lexend has loaded so axis text uses the right font
+    if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(() => Object.values(charts).forEach(c => c.update('none')));
+    }
+})();
+</script>
+
+{% endblock %}

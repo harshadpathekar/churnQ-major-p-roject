@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Preprocessing complete · ChurnQ{% endblock %}
+{% block page_class %}page-bare{% endblock %}
+
+{% block content %}
+
+<div class="page-head">
+    <h1>Preprocessing complete</h1>
+    <span class="meta">
+        {{ filename.rsplit('.', 1)[0] }} · {{ '{:,}'.format(report.records_after) }} records
+        {% if report.records_before != report.records_after %}
+        (started with {{ '{:,}'.format(report.records_before) }}, after cleaning)
+        {% endif %}
+    </span>
+</div>
+
+<div class="bento">
+
+    <section class="tile span-6">
+        <p class="hint" style="max-width: 80ch;">
+            This file has been cleaned and prepared using the same encoders,
+            scaler, and feature selection the active model was trained with.
+            Nothing was retrained. These are internal steps, shown here
+            only so you can verify them if needed.
+        </p>
+        <div class="metric-strip" style="margin-top: 14px;">
+            <div class="metric"><div class="v">{{ report.encoding_report.total_features_after_encoding }}</div><div class="l">Features after encoding</div></div>
+            <div class="metric"><div class="v">{{ report.feature_selection.n_features }}</div><div class="l">Features used by model</div></div>
+            <div class="metric"><div class="v">{{ report.duplicates_report.duplicates_removed }}</div><div class="l">Duplicates removed</div></div>
+            <div class="metric"><div class="v">{{ report.missing_report.rows_dropped }}</div><div class="l">Rows with missing data dropped</div></div>
+        </div>
+    </section>
+
+    <details class="tile fold span-6">
+        <summary>Encoding details</summary>
+        <div class="review-table-wrap">
+            <table>
+                <tbody>
+                    <tr><td><b>ID column (carried through, not used)</b></td><td>{{ report.encoding_report.id_column or "None detected" }}</td></tr>
+                    <tr><td><b>Label-encoded columns</b></td><td>{{ report.encoding_report.binary_encoded | join(", ") if report.encoding_report.binary_encoded else "None" }}</td></tr>
+                    <tr><td><b>One-hot encoded columns</b></td><td>{{ report.encoding_report.one_hot_encoded | join(", ") if report.encoding_report.one_hot_encoded else "None" }}</td></tr>
+                </tbody>
+            </table>
+        </div>
+        {% if report.encoding_report.unseen_categories %}
+        <p class="notice-warn">
+            Note: some values in this file were not seen during training and
+            were mapped to the closest known category:
+            {% for u in report.encoding_report.unseen_categories %}
+            {{ u.column }} ({{ u.unseen_rows }} rows){% if not loop.last %}, {% endif %}
+            {% endfor %}
+        </p>
+        {% endif %}
+    </details>
+
+    <details class="tile fold span-6">
+        <summary>Scaling details</summary>
+        <p>
+            All {{ report.scaling.total_features_scaled }} numeric features
+            were scaled using the exact StandardScaler fitted during
+            training (not refit on this file), so values stay on the same
+            footing the model learned from.
+        </p>
+    </details>
+
+    <details class="tile fold span-6">
+        <summary>Feature selection details</summary>
+        <div class="review-table-wrap">
+            <table>
+                <thead><tr><th>#</th><th>Feature used by the model</th></tr></thead>
+                <tbody>
+                    {% for feature in report.feature_selection.selected_features %}
+                    <tr><td>{{ loop.index }}</td><td>{{ feature }}</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </details>
+
+</div>
+
+<div class="action-bar">
+    <a href="/predict-new" class="btn-ghost">← Upload a Different File</a>
+    <a href="/predict-new/run/{{ report.predict_id }}" class="btn-primary">Proceed to Prediction →</a>
+</div>
+
+{% endblock %}

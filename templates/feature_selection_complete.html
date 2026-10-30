@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Feature selection complete · ChurnQ{% endblock %}
+{% block page_class %}page-bare{% endblock %}
+
+{% block content %}
+
+<div class="page-head">
+    <h1>Feature selection complete</h1>
+    <span class="meta">{{ filename.rsplit('.', 1)[0] }} · the most informative features were kept for the quantum model</span>
+</div>
+
+<div class="bento">
+
+    <section class="tile span-6">
+        <div class="metric-strip">
+            <div class="metric"><div class="v">{{ selection_report.total_features_before }}</div><div class="l">Features before</div></div>
+            <div class="metric"><div class="v">{{ selection_report.total_features_after }}</div><div class="l">Features selected</div></div>
+            <div class="metric"><div class="v">8</div><div class="l">Qubits for VQC</div></div>
+        </div>
+    </section>
+
+    <section class="tile span-6">
+        <div class="tile-title">Feature importance scores (Mutual Information)</div>
+        <p class="hint">Features are ranked by how much they tell us about churn.</p>
+        <div class="review-table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Feature</th>
+                        <th>MI Score</th>
+                        <th>Status</th>
+                        <th>Reason</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in selection_report.all_scores %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td><b>{{ item.feature }}</b></td>
+                        <td>{{ item.score }}</td>
+                        <td>
+                            {% if item.selected %}
+                            <span class="badge badge-green">Selected</span>
+                            {% else %}
+                            <span class="badge badge-gray">Dropped</span>
+                            {% endif %}
+                        </td>
+                        <td class="reason-text" style="max-width: 420px;">{{ item.reason }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+</div>
+
+<div class="action-bar">
+    <a href="/" class="btn-ghost">← Upload Another Dataset</a>
+    <a href="/predict-active/{{ filename }}" class="btn-primary">Proceed to Prediction →</a>
+</div>
+
+{% endblock %}

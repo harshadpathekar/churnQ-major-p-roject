@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Scaling complete · ChurnQ{% endblock %}
+{% block page_class %}page-bare{% endblock %}
+
+{% block content %}
+
+<div class="page-head">
+    <h1>Feature scaling complete</h1>
+    <span class="meta">{{ filename.rsplit('.', 1)[0] }} · data split into training and testing sets</span>
+</div>
+
+<div class="bento">
+
+    <section class="tile span-6">
+        <div class="metric-strip">
+            <div class="metric"><div class="v">{{ scaling_report.total_features }}</div><div class="l">Total features</div></div>
+            <div class="metric"><div class="v">{{ scaling_report.train_size }}</div><div class="l">Training records ({{ scaling_report.train_percentage }}%)</div></div>
+            <div class="metric"><div class="v">{{ scaling_report.test_size }}</div><div class="l">Testing records ({{ scaling_report.test_percentage }}%)</div></div>
+        </div>
+    </section>
+
+    <section class="tile span-6">
+        <div class="tile-title">Features used</div>
+        <div class="review-table-wrap scroll-y">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Feature Name</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for feature in scaling_report.feature_names %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ feature }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+</div>
+
+<div class="action-bar">
+    <a href="/" class="btn-ghost">← Upload Another Dataset</a>
+    <a href="/feature-selection/{{ filename }}" class="btn-primary">Proceed to Feature Selection →</a>
+</div>
+
+{% endblock %}

@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}Customer segmentation · ChurnQ{% endblock %}
+{% block page_class %}page-bare{% endblock %}
+
+{% block content %}
+
+<div class="page-head">
+    <h1>Customer segmentation</h1>
+    <span class="meta">{{ filename.rsplit('.', 1)[0] }} · {{ '{:,}'.format(total) }} customers segmented</span>
+</div>
+
+<p class="hint" style="margin: 0 6px; max-width: none; color: var(--text-2);">
+    Each customer is placed in exactly one behavioral segment, using
+    tenure, monthly charges, contract type, number of add-on services and
+    the quantum model's churn prediction. Charge and tenure cut-offs are
+    taken from this file's own distribution.
+</p>
+
+{% set max_count = (segment_cards | map(attribute='count') | max) or 1 %}
+{% set col_labels = {
+    'customerID': 'Customer', 'customer_id': 'Customer', 'CustomerID': 'Customer',
+    'tenure': 'Tenure (mo)', 'MonthlyCharges': 'Monthly charges', 'Contract': 'Contract',
+    'num_services': 'Add-on services', 'churn_probability': 'Churn probability',
+    'predicted_churn': 'Predicted churn', 'risk_level': 'Risk'
+} %}
+
+<div class="bento">
+
+    {# Segment tiles. seg-<slug> sets the colour, e.g. "Churner - Disengaged" -> seg-churner-disengaged #}
+    {% for c in segment_cards %}
+    <section class="tile tile-seg span-2 seg-{{ c.name | lower | replace(' - ', '-') | replace(' ', '-') }}">
+        <div class="tile-label"><span class="seg-dot"></span>{{ c.name }}</div>
+        <div class="big-num sm" style="margin: 6px 0 2px;">{{ '{:,}'.format(c.count) }}</div>
+        <div class="tile-cap">{{ c.pct }}% of customers</div>
+        <div class="mini-bar"><span style="width: {{ (100 * c.count / max_count) | round(1) }}%;"></span></div>
+    </section>
+    {% endfor %}
+
+    <section class="tile span-6">
+        <div class="tile-title">Segments by risk level</div>
+        <div class="review-table-wrap">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Segment</th><th>Total</th>
+                        <th>High risk</th><th>Medium risk</th><th>Low risk</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in risk_table %}
+                    <tr>
+                        <td>
+                            <span class="seg-{{ r.name | lower | replace(' - ', '-') | replace(' ', '-') }}"><span class="seg-dot"></span></span>{{ r.name }}
+                        </td>
+                        <td>{{ '{:,}'.format(r.total) }}</td>
+                        <td>{{ '{:,}'.format(r.High) }}</td>
+                        <td>{{ '{:,}'.format(r.Medium) }}</td>
+                        <td>{{ '{:,}'.format(r.Low) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="tile span-6">
+        <div class="tbl-head" style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-end; gap:10px;">
+            <div>
+                <div class="tile-title">Customers</div>
+                <span class="tile-cap" id="shownCount"></span>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <label for="segFilter" class="tile-label">Filter by segment</label>
+                <select id="segFilter">
+                    <option value="">All segments</option>
+                    {% for s in segments %}
+                    <option value="{{ s }}">{{ s }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="review-table-wrap scroll-y">
+            <table class="table" id="custTable">
+                <thead>
+                    <tr>
+                        {% for col in columns %}<th>{{ col_labels.get(col, col) }}</th>{% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in rows %}
+                    <tr data-seg="{{ row['Segment'] }}">
+                        {% for col in columns %}
+                        <td{% if loop.first or col == 'Segment' %} class="nowrap"{% endif %}>
+                            {% if col == 'risk_level' %}
+                            <span class="tag-risk {{ row[col] | lower }}">{{ row[col] }}</span>
+                            {% elif col == 'Segment' %}
+                            <span class="seg-{{ row[col] | lower | replace(' - ', '-') | replace(' ', '-') }}"><span class="seg-dot"></span></span>{{ row[col] }}
+                            {% else %}
+                            {{ row[col] }}
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+</div>
+
+<div class="action-bar">
+    <a href="/predict-new/download/{{ filename }}" class="btn-ghost">← Back to Predictions (CSV)</a>
+    <a href="/segmentation/download/{{ filename }}" class="btn-ghost">Download Segments (CSV) ↓</a>
+    <a href="/dashboard/{{ filename }}" class="btn-primary">View Dashboard →</a>
+</div>
+
+<script>
+    const filter = document.getElementById("segFilter");
+    const rows = document.querySelectorAll("#custTable tbody tr");
+    const shown = document.getElementById("shownCount");
+
+    function applyFilter() {
+        const val = filter.value;
+        let n = 0;
+        rows.forEach(r => {
+            const show = !val || r.dataset.seg === val;
+            r.style.display = show ? "" : "none";
+            if (show) n++;
+        });
+        shown.textContent = "Showing " + n + " customers";
+    }
+    filter.addEventListener("change", applyFilter);
+    applyFilter();
+</script>
+
+{% endblock %}

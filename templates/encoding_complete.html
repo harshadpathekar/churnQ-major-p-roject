@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Encoding complete · ChurnQ{% endblock %}
+{% block page_class %}page-bare{% endblock %}
+
+{% block content %}
+
+<div class="page-head">
+    <h1>Encoding complete</h1>
+    <span class="meta">{{ filename.rsplit('.', 1)[0] }} · categorical columns converted to numbers</span>
+</div>
+
+<div class="bento">
+
+    <section class="tile span-6">
+        <div class="metric-strip">
+            <div class="metric"><div class="v">{{ '{:,}'.format(total_records) }}</div><div class="l">Records</div></div>
+            <div class="metric"><div class="v">{{ total_features }}</div><div class="l">Features after encoding</div></div>
+        </div>
+    </section>
+
+    <section class="tile span-6">
+        <div class="tile-title">Encoding summary</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Encoding Type</th>
+                    <th>Columns</th>
+                    <th>Count</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Label Encoded (Binary)</td>
+                    <td class="reason-text">
+                        {{ encoding_report.label_encoded | join(", ") if encoding_report.label_encoded else "None" }}
+                    </td>
+                    <td>{{ encoding_report.label_encoded | length }}</td>
+                </tr>
+                <tr>
+                    <td>One Hot Encoded (Multi-category)</td>
+                    <td class="reason-text">
+                        {{ encoding_report.one_hot_encoded | join(", ") if encoding_report.one_hot_encoded else "None" }}
+                    </td>
+                    <td>{{ encoding_report.one_hot_encoded | length }}</td>
+                </tr>
+                <tr>
+                    <td>Skipped (ID Column)</td>
+                    <td class="reason-text">
+                        {{ encoding_report.skipped | join(", ") if encoding_report.skipped else "None" }}
+                    </td>
+                    <td>{{ encoding_report.skipped | length }}</td>
+                </tr>
+                <tr>
+                    <td>Target Variable</td>
+                    <td class="reason-text">
+                        {{ encoding_report.target }}
+                        (Classes: {{ encoding_report.target_classes | join(", ") }})
+                    </td>
+                    <td>1</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section class="tile span-6">
+        <div class="tile-title">Encoded dataset preview</div>
+        <p class="hint">First 10 rows after encoding.</p>
+        <div class="preview-wrap">
+            {{ preview|safe }}
+        </div>
+    </section>
+
+</div>
+
+<div class="action-bar">
+    <a href="/" class="btn-ghost">← Upload Another Dataset</a>
+    <a href="/scale/{{ filename }}" class="btn-primary">Proceed to Scaling →</a>
+</div>
+
+{% endblock %}

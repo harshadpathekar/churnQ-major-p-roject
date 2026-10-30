@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>{% block title %}ChurnQ · Telecom churn prediction{% endblock %}</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/assistant.css') }}">
+
+</head>
+
+<body>
+
+{# Pipeline steps shown in the top bar. A page can force its step by setting
+   active_step (1 to 6) at the top of its template; otherwise the step is
+   looked up from the route name in step_of below. Edit the table to move a
+   page to a different step. #}
+{% set steps = ['Upload', 'Preprocess', 'Predict', 'Segments', 'Dashboard', 'Retention'] %}
+{% set step_of = {
+    'home': 1, 'predict_new_upload': 1,
+    'upload_file': 2, 'anomaly_review': 2, 'apply_actions_route': 2,
+    'encode': 2, 'scale': 2, 'feature_selection': 2,
+    'predict_new_upload_post': 2, 'predict_active': 2,
+    'predict': 3, 'train_vqc': 3, 'threshold_analysis': 3, 'set_threshold': 3,
+    'activate_model_route': 3, 'repair_model': 3, 'predict_new_run': 3,
+    'segmentation': 4,
+    'dashboard': 5,
+    'retention': 6, 'retention_regenerate': 6
+} %}
+{% set current = active_step if active_step is defined else step_of.get(request.endpoint, 0) %}
+
+<div class="app-frame">
+
+<nav class="navbar" aria-label="Pipeline progress">
+    <span class="brand"><span class="brand-mark">Q</span>ChurnQ</span>
+
+    <ol class="nav-steps">
+        {% for name in steps %}
+        {% set n = loop.index %}
+        <li class="nav-step {{ 'is-done' if n < current else ('is-current' if n == current else 'is-future') }}"{% if n == current %} aria-current="step"{% endif %}>
+            <span class="nav-dot"></span>
+            <span class="nav-label">{{ name }}</span>
+        </li>
+        {% endfor %}
+    </ol>
+</nav>
+
+<main class="container {% block page_class %}{% endblock %}">
+
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert">
+            {{ message }}
+        </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+{% block content %}
+{% endblock %}
+
+</main>
+
+{% block outside_container %}
+{% endblock %}
+
+</div>
+
+<!-- Global Inspect Popup: direct child of body -->
+<div id="inspect-overlay" class="overlay" onclick="closeInspect()"></div>
+
+<div id="inspect-popup" class="popup">
+    <div class="popup-header">
+        <h3 id="popup-title">Inspect Records</h3>
+        <button type="button" class="popup-close" onclick="closeInspect()">✕</button>
+    </div>
+    <div class="popup-meta" id="popup-meta"></div>
+    <div class="popup-table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Customer ID</th>
+                    <th>Value</th>
+                    <th>Detection Reason</th>
+                </tr>
+            </thead>
+            <tbody id="popup-body"></tbody>
+        </table>
+    </div>
+</div>
+
+{% if request.endpoint not in ['home', 'upload_file', 'anomaly_review', 'predict_new_upload'] %}
+<aside class="assistant-dock" aria-label="ChurnQ Assistant">
+    <section class="assistant-dock-panel" id="assistant-dock-panel"
+             aria-label="Chat with ChurnQ Assistant" hidden>
+        <header class="assistant-dock-header">
+            <div>
+                <span class="assistant-dock-kicker">PROJECT HELP</span>
+                <h2>ChurnQ Assistant</h2>
+            </div>
+            <button class="assistant-dock-close" id="assistant-dock-close"
+                    type="button" aria-label="Close assistant">×</button>
+        </header>
+        <iframe
+            id="assistant-dock-frame"
+            title="ChurnQ project chatbot"
+            data-src="https://charnq.netlify.app/"
+            allow="microphone"
+            referrerpolicy="strict-origin-when-cross-origin"
+        ></iframe>
+    </section>
+    <button class="assistant-dock-launcher" id="assistant-dock-launcher"
+            type="button" aria-expanded="false"
+            aria-controls="assistant-dock-panel" title="Ask the ChurnQ chatbot">
+        <span class="assistant-dock-spark" aria-hidden="true">✦</span>
+        <span>Ask AI</span>
+    </button>
+</aside>
+
+<script src="{{ url_for('static', filename='js/assistant.js') }}" defer></script>
+{% endif %}
+
+</body>
+</html>

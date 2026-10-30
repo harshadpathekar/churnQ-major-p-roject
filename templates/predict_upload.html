@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Score new customers · ChurnQ{% endblock %}
+{% block page_class %}page-bare{% endblock %}
+
+{% block content %}
+
+<div class="page-head">
+    <h1>Score new customers</h1>
+    <span class="meta">Predict churn for a new file with the active quantum model</span>
+</div>
+
+{% if has_model %}
+
+<div class="bento">
+
+    <section class="tile tile-fade span-4">
+        <div class="tile-title">Customer file</div>
+
+        <form action="/predict-new/upload" method="POST" enctype="multipart/form-data" class="form-plain">
+            <input
+                type="file"
+                name="dataset"
+                accept=".csv,.xlsx,.xls,.xlsm,.xlsb,.ods"
+                required>
+
+            <button type="submit" class="btn-primary">Upload and continue</button>
+        </form>
+    </section>
+
+    <section class="tile tile-green span-2">
+        <div class="tile-title">Active model</div>
+        <p style="margin: 8px 0 12px; color: inherit; font-weight: 500;">
+            <span class="status-dot"></span>Ready to predict
+        </p>
+        {% if active_info and active_info['_trained_from_file'] is defined %}
+        <div class="tile-label">Trained on</div>
+        <div style="font-weight: 500; margin-bottom: 10px; word-break: break-all;">{{ active_info['_trained_from_file'] }}</div>
+        {% endif %}
+        {% if active_info and active_info['operating_threshold'] is defined %}
+        <div class="tile-label">Churn cutoff</div>
+        <div style="font-weight: 500;">{{ active_info['operating_threshold'] }}</div>
+        {% endif %}
+    </section>
+
+    <section class="tile span-6">
+        <div class="tile-title">Before you upload</div>
+        <div class="notes-row">
+            <div class="note"><b>Accepted files</b>CSV, Excel (.xlsx, .xls, .xlsm, .xlsb) and OpenDocument (.ods).</div>
+            <div class="note"><b>Same columns</b>The file must have the columns the model was trained on.</div>
+            <div class="note"><b>Churn column ignored</b>If the file still has one, it is dropped before scoring.</div>
+            <div class="note"><b>No retraining</b>The saved encoders, scaler and feature selection are reused.</div>
+        </div>
+    </section>
+
+</div>
+
+{% else %}
+
+<div class="bento">
+    <section class="tile tile-salmon span-6">
+        <div class="tile-title">No active model yet</div>
+        <p class="hint" style="max-width: 70ch;">
+            Predictions need a trained and activated quantum model. Upload a
+            labeled file (one that includes the Churn column) to train one
+            first, then come back here to score new customers.
+        </p>
+        <div><a href="/" class="btn-primary" style="margin-top: 8px;">Upload a labeled file to train →</a></div>
+    </section>
+</div>
+
+{% endif %}
+
+{% endblock %}

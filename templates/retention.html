@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="stepper">
+    <div class="step done"><div class="dot">1</div><div class="step-label">Upload</div></div>
+    <div class="step done"><div class="dot">2</div><div class="step-label">Preprocessing</div></div>
+    <div class="step done"><div class="dot">3</div><div class="step-label">Prediction</div></div>
+    <div class="step done"><div class="dot">4</div><div class="step-label">Segmentation</div></div>
+    <div class="step done"><div class="dot">5</div><div class="step-label">Dashboard</div></div>
+    <div class="step done"><div class="dot">6</div><div class="step-label">Retention</div></div>
+</div>
+
+<h2>Retention Strategy</h2>
+
+<p>
+    <b>{{ filename }}</b> &nbsp;|&nbsp;
+    Segments are ordered by monthly revenue at risk, highest first.
+</p>
+
+{% if fallback_count > 0 %}
+<p class="ret-warn">
+    {{ fallback_count }} segment(s) used built-in rule-based advice because
+    Gemini could not be reached. Check the Flask console for the error, then
+    press Regenerate.
+</p>
+{% endif %}
+
+<style>
+    /* All class names are prefixed ret- so base.html styles cannot clash. */
+    .ret-warn {
+        background: #fff6e5; border: 1px solid #f0d9a8; border-radius: 8px;
+        padding: 8px 12px; font-size: 0.9em;
+    }
+    .ret-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+        gap: 18px; margin-top: 18px;
+        height: auto !important; max-height: none !important;
+        overflow: visible !important;
+    }
+    @media (max-width: 480px) { .ret-grid { grid-template-columns: 1fr; } }
+
+    .ret-card {
+        display: block !important;
+        height: auto !important; min-height: 0 !important;
+        max-height: none !important; overflow: visible !important;
+        background: #fff; border: 1px solid #e3e7f0; border-radius: 10px;
+        padding: 16px 18px; border-top: 4px solid #6b7280;
+    }
+    .ret-head {
+        display: flex; justify-content: space-between;
+        align-items: center; gap: 8px;
+    }
+    .ret-head h3 {
+        margin: 0 !important; padding: 0 !important;
+        border: 0 !important; font-size: 1.05rem;
+    }
+    .ret-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+    .ret-pill {
+        display: inline-block; padding: 2px 10px; border-radius: 999px;
+        color: #fff; font-size: 0.78em; white-space: nowrap;
+    }
+    .ret-pill.src { background: #eef2fb; color: #3d4a66; border: 1px solid #cdd4e4; }
+
+    .ret-metrics {
+        display: grid; grid-template-columns: repeat(3, 1fr);
+        gap: 10px 14px; margin: 14px 0;
+    }
+    .ret-metrics .m-label {
+        display: block; font-size: 0.74em; color: #5b6478;
+        text-transform: uppercase; letter-spacing: .03em;
+    }
+    .ret-metrics .m-val { display: block; font-size: 1rem; font-weight: 700; }
+
+    .ret-sub {
+        display: block; font-size: 0.8em; font-weight: 600; color: #5b6478;
+        text-transform: uppercase; letter-spacing: .03em; margin-top: 12px;
+    }
+    .ret-text { display: block; margin: 4px 0 0; color: #2b3348; }
+    .ret-list { display: block; margin: 6px 0 0; padding-left: 20px; }
+    .ret-list li { margin-bottom: 4px; }
+    .ret-empty { color: #5b6478; font-style: italic; }
+
+    /* Middle group of the bottom bar: Regenerate + Download */
+    .ret-mid {
+        display: flex; align-items: center; justify-content: center;
+        flex-wrap: wrap; gap: 12px;
+    }
+    .ret-mid > a {
+        margin: 0 !important; padding: 10px 16px !important;
+        font-size: 0.95rem !important; line-height: 1.25; border-radius: 6px;
+    }
+
+    /* Regenerate button: neutralise any generic form/button styling */
+    #regenForm {
+        display: inline-block !important; background: none !important;
+        border: 0 !important; box-shadow: none !important;
+        padding: 0 !important; margin: 0 !important; width: auto !important;
+    }
+    #regenBtn {
+        display: inline-block !important; width: auto !important;
+        background: #fff !important; color: #1f4a85 !important;
+        border: 1px solid #cdd4e4 !important; border-radius: 6px;
+        padding: 10px 16px !important; font-size: 0.95rem;
+        font-family: inherit; font-weight: 600; cursor: pointer;
+    }
+    #regenBtn:hover:not(:disabled) { border-color: #1f4a85 !important; }
+    #regenBtn:disabled { opacity: .6; cursor: default; }
+</style>
+
+{% set colors = {
+    'Premium': '#4a63d6',
+    'At-Risk Loyal': '#d68a1a',
+    'Churner - Price Sensitive': '#d65a4a',
+    'Churner - Disengaged': '#8a5ad6',
+    'New Customer': '#1d9a5a',
+    'Stable Low-Value': '#6b7280'
+} %}
+{% set pcolors = {'High': '#d65a4a', 'Medium': '#d68a1a', 'Low': '#1d9a5a'} %}
+
+<div class="ret-grid">
+    {% for s in strategies %}
+    <div class="ret-card" style="border-top-color: {{ colors.get(s.segment, '#6b7280') }};">
+
+        <div class="ret-head">
+            <h3>{{ s.segment }}</h3>
+            {% if not s.empty %}
+            <div class="ret-badges">
+                <span class="ret-pill" style="background: {{ pcolors[s.priority] }};">
+                    {{ s.priority }} priority
+                </span>
+                <span class="ret-pill src">{{ s.source }}</span>
+            </div>
+            {% endif %}
+        </div>
+
+        {% if s.empty %}
+            <p class="ret-empty">No customers fall in this segment for this file.</p>
+        {% else %}
+            <div class="ret-metrics">
+                <div><span class="m-label">Customers</span><span class="m-val">{{ s.profile.count }}</span></div>
+                <div><span class="m-label">Predicted churn</span><span class="m-val">{{ s.profile.churn_rate_pct }}%</span></div>
+                <div><span class="m-label">High risk</span><span class="m-val">{{ s.profile.high_risk_pct }}%</span></div>
+                <div><span class="m-label">Revenue at risk</span><span class="m-val">{{ '{:,.0f}'.format(s.profile.revenue_at_risk) }}</span></div>
+                <div><span class="m-label">Avg tenure</span><span class="m-val">{{ s.profile.avg_tenure_months }} mo</span></div>
+                <div><span class="m-label">Avg charges</span><span class="m-val">{{ s.profile.avg_monthly_charge }}</span></div>
+            </div>
+
+            <span class="ret-sub">Why they are at risk</span>
+            <span class="ret-text">{{ s.diagnosis }}</span>
+
+            <span class="ret-sub">Recommended actions</span>
+            <ul class="ret-list">
+                {% for a in s.actions %}<li>{{ a }}</li>{% endfor %}
+            </ul>
+
+            <span class="ret-sub">Best channel</span>
+            <span class="ret-text"><b>{{ s.channel }}</b></span>
+        {% endif %}
+
+    </div>
+    {% endfor %}
+</div>
+
+<div class="action-bar" style="margin-top:24px;">
+    <a href="/dashboard/{{ filename }}">← Back to Dashboard</a>
+    <div class="ret-mid">
+        <form method="POST" action="/retention/regenerate/{{ filename }}" id="regenForm">
+            <button type="submit" id="regenBtn">Regenerate with Gemini ↻</button>
+        </form>
+        <a href="/report/download/{{ filename|urlencode }}" class="btn-ghost" id="reportBtn">Download Report (Excel) ↓</a>
+    </div>
+    <a href="/predict-new" class="btn-primary">Score Another File →</a>
+</div>
+
+<script>
+    document.getElementById("regenForm").addEventListener("submit", function () {
+        const b = document.getElementById("regenBtn");
+        b.disabled = true;
+        b.textContent = "Generating... this can take up to a minute";
+    });
+
+    // Download Report: show a short "preparing" label after the click
+    document.getElementById("reportBtn").addEventListener("click", function () {
+        const b = this, label = b.textContent;
+        b.textContent = "Preparing report...";
+        b.style.pointerEvents = "none";
+        setTimeout(function () {
+            b.textContent = label;
+            b.style.pointerEvents = "";
+        }, 20000);
+    });
+</script>
+
+{% endblock %}

@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}Preprocessing complete · ChurnQ{% endblock %}
+{% block page_class %}page-bare{% endblock %}
+
+{% block content %}
+
+<div class="page-head">
+    <h1>Preprocessing complete</h1>
+    <span class="meta">{{ filename.rsplit('.', 1)[0] }} · cleaned and ready for the next step</span>
+</div>
+
+<div class="bento">
+
+    <section class="tile span-6">
+        <div class="metric-strip">
+            <div class="metric"><div class="v">{{ '{:,}'.format(total_records) }}</div><div class="l">Records</div></div>
+            <div class="metric"><div class="v">{{ total_columns }}</div><div class="l">Columns</div></div>
+            <div class="metric"><div class="v">{{ actions_applied | length }}</div><div class="l">Features with anomaly actions</div></div>
+            <div class="metric"><div class="v">{{ negative_actions_applied | length }}</div><div class="l">Columns with negative-value actions</div></div>
+        </div>
+    </section>
+
+    <section class="tile span-3">
+        <div class="tile-title">Preprocessing summary</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Action</th>
+                    <th>Count</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Values Replaced with Median</td>
+                    <td class="{{ 'status-bad' if preprocessing_log.values_replaced_median > 0 else 'status-good' }}">
+                        {{ preprocessing_log.values_replaced_median }}
+                    </td>
+                </tr>
+                <tr>
+                    <td>Values Replaced with Zero</td>
+                    <td class="{{ 'status-bad' if preprocessing_log.values_replaced_zero > 0 else 'status-good' }}">
+                        {{ preprocessing_log.values_replaced_zero }}
+                    </td>
+                </tr>
+                <tr>
+                    <td>Rows Deleted (Negative Values)</td>
+                    <td class="{{ 'status-bad' if preprocessing_log.rows_deleted_negative > 0 else 'status-good' }}">
+                        {{ preprocessing_log.rows_deleted_negative }}
+                    </td>
+                </tr>
+                <tr>
+                    <td>Values Adjusted (Winsorized)</td>
+                    <td class="{{ 'status-bad' if preprocessing_log.rows_adjusted_winsorize > 0 else 'status-good' }}">
+                        {{ preprocessing_log.rows_adjusted_winsorize }}
+                    </td>
+                </tr>
+                <tr>
+                    <td>Rows Excluded (Anomaly Action)</td>
+                    <td class="{{ 'status-bad' if preprocessing_log.rows_excluded_anomaly > 0 else 'status-good' }}">
+                        {{ preprocessing_log.rows_excluded_anomaly }}
+                    </td>
+                </tr>
+                <tr>
+                    <td>Rows Removed (Missing ID)</td>
+                    <td class="{{ 'status-bad' if preprocessing_log.rows_removed_missing_id > 0 else 'status-good' }}">
+                        {{ preprocessing_log.rows_removed_missing_id }}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <div class="stack span-3">
+
+        <section class="tile">
+            <div class="tile-title">Statistical anomaly actions</div>
+            {% if actions_applied %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Action Taken</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for col, action in actions_applied.items() %}
+                    <tr>
+                        <td><b>{{ col }}</b></td>
+                        <td>
+                            <span class="badge
+                                {% if action == 'Retain Records' %}badge-green
+                                {% elif action == 'Adjust Values' %}badge-amber
+                                {% else %}badge-red
+                                {% endif %}">
+                                {{ action }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="no-anomalies">
+                <p>No statistical anomalies were present.</p>
+            </div>
+            {% endif %}
+        </section>
+
+        <section class="tile">
+            <div class="tile-title">Negative value actions</div>
+            {% if negative_actions_applied %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Column</th>
+                        <th>Action Taken</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for col, action in negative_actions_applied.items() %}
+                    <tr>
+                        <td><b>{{ col }}</b></td>
+                        <td>
+                            <span class="badge
+                                {% if action == 'Replace with Median' %}badge-amber
+                                {% elif action == 'Replace with 0' %}badge-green
+                                {% else %}badge-red
+                                {% endif %}">
+                                {{ action }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="no-anomalies">
+                <p>No negative values were present.</p>
+            </div>
+            {% endif %}
+        </section>
+
+    </div>
+
+    {% if retained_missing_data %}
+    <section class="tile span-6">
+        <div class="tile-title">Retained missing ID records</div>
+        <p class="section-desc" style="margin-top: 6px;">
+            The following records had missing Customer IDs
+            but were retained based on your selection.
+        </p>
+
+        <div class="preview-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Placeholder ID</th>
+                    {% for key in retained_missing_data[0].keys() %}
+                    {% if key != '_placeholder_id' %}
+                    <th>{{ key }}</th>
+                    {% endif %}
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in retained_missing_data %}
+                <tr>
+                    <td>
+                        <span class="badge badge-amber">
+                            {{ row._placeholder_id }}
+                        </span>
+                    </td>
+                    {% for key, val in row.items() %}
+                    {% if key != '_placeholder_id' %}
+                    <td>{{ val }}</td>
+                    {% endif %}
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </section>
+    {% endif %}
+
+    <section class="tile span-6">
+        <div class="tile-title">Processed dataset preview</div>
+        <p class="hint">First 10 rows after cleaning.</p>
+        <div class="preview-wrap">
+            {{ preview|safe }}
+        </div>
+    </section>
+
+</div>
+
+<div class="action-bar">
+    <a href="/" class="btn-ghost">← Upload Another Dataset</a>
+    <a href="/encode/{{ filename }}" class="btn-primary">View Preprocessing Summary →</a>
+</div>
+
+{% endblock %}
