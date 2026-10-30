@@ -10,13 +10,11 @@ services:
       - key: APP_AUTH_REQUIRED
         value: "true"
       - key: APP_USERNAME
-        sync: false
+        value: churnq
       - key: APP_PASSWORD
-        sync: false
+        generateValue: true
       - key: PYTHON_VERSION
         value: 3.12.16
-      - key: GEMINI_API_KEY
-        sync: false
       - key: GEMINI_MODEL
         value: gemini-3.5-flash-lite
       - key: FLASK_SECRET_KEY
