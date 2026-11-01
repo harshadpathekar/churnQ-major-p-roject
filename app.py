@@ -200,8 +200,17 @@ def anomaly_review(filename):
     )
 
     if not os.path.exists(cleaned_path):
-        flash("Session expired. Please upload again.")
-        return redirect("/")
+        upload_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+        if not os.path.isfile(upload_path):
+            flash("Session expired. Please upload again.")
+            return redirect("/")
+
+        # Rebuild the review file if a previous serverless request only saved
+        # the original upload before its temporary workspace was discarded.
+        df, _ = handle_missing_values(load_dataset(upload_path))
+        df, _ = remove_duplicates(df)
+        os.makedirs(app.config["PROCESSED_FOLDER"], exist_ok=True)
+        df.to_csv(cleaned_path, index=False)
 
     df = load_dataset(cleaned_path)
     anomaly_report = detect_outliers(df)
