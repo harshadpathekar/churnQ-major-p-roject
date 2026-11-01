@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import os
+import time
 from pathlib import Path
 
 from flask import current_app, g, make_response
@@ -14,6 +15,18 @@ from config import DATA_DIR, INITIAL_PROCESSED_FOLDER, PROCESSED_FOLDER
 _BLOB_PREFIX = "churnq/"
 _CACHED_ETAGS: dict[str, str] = {}
 _CACHED_PATHS: set[str] = set()
+
+
+def _blob_call(operation):
+    """Retry brief Blob service interruptions before failing a request."""
+    for attempt in range(3):
+        try:
+            return operation()
+        except Exception as error:
+            status_code = getattr(error, "status_code", None)
+            if status_code not in {429, 500, 502, 503, 504} or attempt == 2:
+                raise
+            time.sleep(0.25 * (2 ** attempt))
 
 
 def _blob_sdk():
@@ -58,12 +71,23 @@ def _digest(path: Path) -> str:
     return hasher.hexdigest()
 
 
+def _is_unchanged_bundled_file(path: Path, digest: str) -> bool:
+    try:
+        relative = path.relative_to(Path(PROCESSED_FOLDER))
+    except ValueError:
+        return False
+    bundled = Path(INITIAL_PROCESSED_FOLDER) / relative
+    return bundled.is_file() and _digest(bundled) == digest
+
+
 def _restore_from_blob() -> None:
     sdk = _blob_sdk()
     if sdk is None:
         return
 
-    remote_blobs = list(sdk.query_blobs(prefix=_BLOB_PREFIX))
+    remote_blobs = _blob_call(
+        lambda: list(sdk.query_blobs(prefix=_BLOB_PREFIX))
+    )
     remote_paths = {blob.pathname for blob in remote_blobs}
     for stale_path in _CACHED_PATHS - remote_paths:
         local = _local_path(stale_path)
@@ -77,7 +101,9 @@ def _restore_from_blob() -> None:
         if local.is_file() and _CACHED_ETAGS.get(blob.pathname) == blob.etag:
             continue
         local.parent.mkdir(parents=True, exist_ok=True)
-        result = sdk.get_blob(blob.pathname, access="private")
+        result = _blob_call(
+            lambda: sdk.get_blob(blob.pathname, access="private")
+        )
         local.write_bytes(result.body)
         _CACHED_ETAGS[blob.pathname] = blob.etag
 
@@ -115,17 +141,22 @@ def _persist_to_blob(response):
             digest = _digest(path)
             if pathname in remote_paths and snapshot.get(pathname) == digest:
                 continue
-            result = sdk.put_blob(
-                pathname,
-                path.read_bytes(),
-                access="private",
-                allow_overwrite=True,
+            if (pathname not in remote_paths
+                    and _is_unchanged_bundled_file(path, digest)):
+                continue
+            result = _blob_call(
+                lambda: sdk.put_blob(
+                    pathname,
+                    path.read_bytes(),
+                    access="private",
+                    allow_overwrite=True,
+                )
             )
             _CACHED_ETAGS[pathname] = result.etag
 
         removed_paths = remote_paths - current_paths
         if removed_paths:
-            sdk.delete_blob(sorted(removed_paths))
+            _blob_call(lambda: sdk.delete_blob(sorted(removed_paths)))
             for pathname in removed_paths:
                 _CACHED_ETAGS.pop(pathname, None)
 
