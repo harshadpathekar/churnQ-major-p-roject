@@ -1095,5 +1095,12 @@ def download_full_report(filename):
     )
 
 
+# Register after the app's own request hooks so persisted files are restored
+# before routes run and saved after each Vercel response.
+from persistent_storage import register_blob_storage
+
+register_blob_storage(app)
+
+
 if __name__ == "__main__":
     app.run(debug=True, use_reloader=False)
