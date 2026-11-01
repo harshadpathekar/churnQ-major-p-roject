@@ -3,6 +3,7 @@ import hmac
 import os
 import re
 import json
+import shutil
 import numpy as np
 
 from flask import (
@@ -50,6 +51,7 @@ from predict.predict_pipeline import (
 from config import (
     UPLOAD_FOLDER,
     PROCESSED_FOLDER,
+    INITIAL_PROCESSED_FOLDER,
     MAX_CONTENT_LENGTH
 )
 
@@ -65,6 +67,13 @@ app.config["MAX_CONTENT_LENGTH"] = MAX_CONTENT_LENGTH
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(PROCESSED_FOLDER, exist_ok=True)
+
+# Seed Vercel's writable temp storage with the bundled default model files.
+if os.getenv("VERCEL") == "1" and not os.listdir(PROCESSED_FOLDER):
+    if os.path.isdir(INITIAL_PROCESSED_FOLDER):
+        shutil.copytree(
+            INITIAL_PROCESSED_FOLDER, PROCESSED_FOLDER, dirs_exist_ok=True
+        )
 
 
 @app.before_request
