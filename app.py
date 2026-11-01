@@ -59,6 +59,22 @@ from utils.validation import allowed_file
 
 app = Flask(__name__)
 
+
+@app.url_value_preprocessor
+def normalize_encoded_path_spaces(endpoint, values):
+    """Normalize spaces in dataset IDs passed through Vercel's URL adapter.
+
+    Uploaded filenames use the form ``Telco dataset-N.ext``. Some serverless
+    adapters leave ``%20`` encoded in Flask's route values, which makes later
+    workflow requests look for files under a different name than the upload.
+    Decode only spaces here; do not unquote path separators in user input.
+    """
+    if not values:
+        return
+    for key, value in values.items():
+        if isinstance(value, str) and "%20" in value:
+            values[key] = value.replace("%20", " ")
+
 app.secret_key = os.environ.get("FLASK_SECRET_KEY") or os.urandom(32)
 
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
