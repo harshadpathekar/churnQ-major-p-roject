@@ -6,14 +6,15 @@
 {% block content %}
 
 <div class="page-head hero">
-    <h1>Upload dataset</h1>
-    <span class="meta">Telecom customer churn prediction, powered by quantum computing</span>
+    <h1>ChurnQ workspace</h1>
+    <span class="meta">The complete telecom churn workflow: prepare data, predict risk, explore segments, and plan retention.</span>
 </div>
 
 <div class="bento">
 
     <section class="tile tile-fade span-4">
-        <div class="tile-title">Customer file</div>
+        <div class="tile-title">Start a full analysis</div>
+        <p class="hint">Upload a labeled customer dataset to run the complete training and analysis workflow.</p>
 
         <form action="/upload" method="POST" enctype="multipart/form-data" class="form-plain">
             <input
@@ -27,14 +28,22 @@
     </section>
 
     <section class="tile span-2">
-        <div class="tile-title">After you upload</div>
-        <ol class="timeline">
-            <li>Missing values and duplicate rows are cleaned, then you review unusual values.</li>
-            <li>Each customer is scored with the quantum model.</li>
-            <li>Customers are grouped by behaviour.</li>
-            <li>Risk, revenue and segments open in an interactive dashboard.</li>
-            <li>Each segment gets a retention plan.</li>
-        </ol>
+        <div class="tile-title">Already have a trained model?</div>
+        <p class="hint">Score a new, unlabeled customer file with the active model, then continue to segments, the dashboard, and retention plans.</p>
+        <a href="/predict-new" class="btn-primary" style="margin-top: 14px;">Score new customers →</a>
+    </section>
+
+    <section class="tile span-6">
+        <div class="tile-title">What is included in the project</div>
+        <div class="project-modules">
+            <article><span class="module-number">01</span><b>Data preparation</b><span>Clean missing values and duplicates, review unusual values, encode and scale features.</span></article>
+            <article><span class="module-number">02</span><b>Quantum churn prediction</b><span>Train or use the churn model and inspect customer risk scores.</span></article>
+            <article><span class="module-number">03</span><b>Customer segments</b><span>Group customers by behavior, contract, tenure, and churn risk.</span></article>
+            <article><span class="module-number">04</span><b>Interactive dashboard</b><span>Explore risk, revenue, contracts, and customer-level results.</span></article>
+            <article><span class="module-number">05</span><b>Retention plans</b><span>Review tailored retention actions for each customer segment.</span></article>
+            <article><span class="module-number">06</span><b>Downloadable reports</b><span>Export predictions, segments, and a combined Excel report.</span></article>
+        </div>
+        <p class="module-note">Upload a labeled dataset to start the full workflow. Each next step appears after the previous step finishes.</p>
     </section>
 
 </div>

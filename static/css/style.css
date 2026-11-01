@@ -617,6 +617,42 @@ a:hover {
 .span-4 { grid-column: span 4; }
 .span-6 { grid-column: span 6; }
 
+.project-modules {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 18px;
+}
+
+.project-modules article {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 7px;
+    padding: 16px;
+    border: 1px solid var(--line-soft);
+    border-radius: var(--radius-sm);
+    background: var(--tile-hi);
+}
+
+.project-modules b { font-weight: 600; }
+
+.project-modules article > span:last-child,
+.module-note {
+    color: var(--text-2);
+    font-size: var(--fs-small);
+    line-height: 1.55;
+}
+
+.module-number {
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .08em;
+}
+
+.module-note { margin: 16px 0 0; }
+
 .tile-title {
     margin: 0 0 4px;
     font-size: 19px;
@@ -1597,6 +1633,10 @@ body.popup-open {
         grid-column: span 6;
     }
 
+    .project-modules {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
     .row-2 {
         grid-row: auto;
     }
@@ -1612,4 +1652,8 @@ body.popup-open {
     .file-meta {
         gap: 4px 20px;
     }
+}
+
+@media (max-width: 440px) {
+    .project-modules { grid-template-columns: 1fr; }
 }
