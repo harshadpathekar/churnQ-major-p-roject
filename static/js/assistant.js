@@ -31,13 +31,23 @@
         placeAboveActionBar();
     }
 
+    function closeOnEscape(event) {
+        if (event.key === "Escape" && !panel.hidden) setOpen(false);
+    }
+
+    frame.addEventListener("load", () => {
+        try {
+            frame.contentWindow.document.addEventListener("keydown", closeOnEscape);
+        } catch (error) {
+            // Cross-origin chatbot: Escape only works from the parent page.
+        }
+    });
+
     window.addEventListener("scroll", placeAboveActionBar, { passive: true });
     window.addEventListener("resize", placeAboveActionBar);
     placeAboveActionBar();
 
     launcher.addEventListener("click", () => setOpen(panel.hidden));
     closeButton.addEventListener("click", () => setOpen(false));
-    document.addEventListener("keydown", (event) => {
-        if (event.key === "Escape" && !panel.hidden) setOpen(false);
-    });
+    document.addEventListener("keydown", closeOnEscape);
 })();

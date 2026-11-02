@@ -1,0 +1,2074 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ChurnQ AI Chatbot — Ask questions about the AI-Assisted Customer Churn Prediction for Telecom Using Quantum Computing project.">
+    <title>ChurnQ — Project Assistant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+/* ========================================================================
+   ChurnQ Chatbot — Antigravity-Inspired Black & White Theme
+   Sleek, minimal, monochrome with subtle accent glows
+   ======================================================================== */
+
+/* ----- CSS Custom Properties ----- */
+:root {
+    --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.25s ease;
+    --transition-slow: 0.4s ease;
+
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 18px;
+    --radius-xl: 24px;
+    --radius-full: 9999px;
+
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.15);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.2);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.3);
+    --shadow-glow: 0 0 20px rgba(255, 255, 255, 0.08);
+}
+
+/* ═══════════════════════════════════════════════════════
+   DARK THEME — Antigravity-style pure black
+   ═══════════════════════════════════════════════════════ */
+[data-theme="dark"] {
+    --bg-primary: #000000;
+    --bg-secondary: #0a0a0a;
+    --bg-tertiary: #141414;
+    --bg-glass: rgba(10, 10, 10, 0.85);
+    --bg-glass-hover: rgba(20, 20, 20, 0.9);
+    --bg-input: #0e0e0e;
+    --bg-bot-bubble: linear-gradient(135deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
+    --bg-user-bubble: linear-gradient(135deg, #ffffff, #e0e0e0);
+    --bg-chip: rgba(255, 255, 255, 0.06);
+    --bg-chip-hover: rgba(255, 255, 255, 0.12);
+
+    --text-primary: #f0f0f0;
+    --text-secondary: #999999;
+    --text-tertiary: #555555;
+    --text-user-bubble: #000000;
+    --text-bot-bubble: #d4d4d4;
+    --text-chip: #b0b0b0;
+
+    --border-primary: rgba(255, 255, 255, 0.08);
+    --border-secondary: rgba(255, 255, 255, 0.04);
+    --border-input: rgba(255, 255, 255, 0.1);
+    --border-input-focus: rgba(255, 255, 255, 0.4);
+
+    --accent-primary: #ffffff;
+    --accent-secondary: #888888;
+    --accent-gradient: linear-gradient(135deg, #ffffff, #999999);
+    --accent-subtle: rgba(255, 255, 255, 0.1);
+
+    --scrollbar-track: #0a0a0a;
+    --scrollbar-thumb: #222222;
+    --scrollbar-thumb-hover: #444444;
+
+    --mic-active: #ff4444;
+    --voice-ring: rgba(255, 255, 255, 0.15);
+    --speaker-active: #4ade80;
+}
+
+/* ═══════════════════════════════════════════════════════
+   LIGHT THEME — Clean white Antigravity style
+   ═══════════════════════════════════════════════════════ */
+[data-theme="light"] {
+    --bg-primary: #f8f8f8;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #f0f0f0;
+    --bg-glass: rgba(255, 255, 255, 0.9);
+    --bg-glass-hover: rgba(255, 255, 255, 0.95);
+    --bg-input: #ffffff;
+    --bg-bot-bubble: linear-gradient(135deg, rgba(0, 0, 0, 0.03), rgba(0, 0, 0, 0.01));
+    --bg-user-bubble: linear-gradient(135deg, #1a1a1a, #333333);
+    --bg-chip: rgba(0, 0, 0, 0.04);
+    --bg-chip-hover: rgba(0, 0, 0, 0.08);
+
+    --text-primary: #111111;
+    --text-secondary: #666666;
+    --text-tertiary: #999999;
+    --text-user-bubble: #ffffff;
+    --text-bot-bubble: #333333;
+    --text-chip: #555555;
+
+    --border-primary: rgba(0, 0, 0, 0.08);
+    --border-secondary: rgba(0, 0, 0, 0.04);
+    --border-input: rgba(0, 0, 0, 0.12);
+    --border-input-focus: rgba(0, 0, 0, 0.4);
+
+    --accent-primary: #111111;
+    --accent-secondary: #666666;
+    --accent-gradient: linear-gradient(135deg, #1a1a1a, #555555);
+    --accent-subtle: rgba(0, 0, 0, 0.06);
+
+    --scrollbar-track: #f0f0f0;
+    --scrollbar-thumb: #cccccc;
+    --scrollbar-thumb-hover: #999999;
+
+    --mic-active: #ef4444;
+    --voice-ring: rgba(0, 0, 0, 0.1);
+    --speaker-active: #22c55e;
+}
+
+/* ----- Reset & Base ----- */
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+    font-family: var(--font-primary);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow: hidden;
+    transition: background var(--transition-normal), color var(--transition-normal);
+}
+
+/* ----- Particles Canvas ----- */
+#particlesCanvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.3;
+}
+
+/* ----- App Container ----- */
+.app-container {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    max-width: 860px;
+    margin: 0 auto;
+}
+
+/* ----- Header ----- */
+.chat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    background: var(--bg-glass);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-bottom: 1px solid var(--border-secondary);
+    flex-shrink: 0;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.logo-icon {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    animation: logoPulse 5s ease-in-out infinite;
+}
+
+@keyframes logoPulse {
+    0%, 100% { filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.2)); }
+    50% { filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.4)); }
+}
+
+[data-theme="light"] .logo-icon {
+    animation: logoPulseLight 5s ease-in-out infinite;
+}
+
+@keyframes logoPulseLight {
+    0%, 100% { filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.1)); }
+    50% { filter: drop-shadow(0 0 12px rgba(0, 0, 0, 0.2)); }
+}
+
+.header-text h1 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    background: var(--accent-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.3;
+}
+
+.header-subtitle {
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-icon {
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-chip);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.btn-icon:hover {
+    background: var(--bg-chip-hover);
+    color: var(--text-primary);
+    transform: scale(1.05);
+    box-shadow: var(--shadow-glow);
+}
+
+/* Voice toggle active state */
+.btn-icon.voice-active {
+    color: var(--speaker-active);
+    border-color: var(--speaker-active);
+    background: rgba(74, 222, 128, 0.1);
+}
+
+/* Theme toggle icon visibility */
+[data-theme="dark"] .icon-moon { display: none; }
+[data-theme="dark"] .icon-sun { display: block; }
+[data-theme="light"] .icon-sun { display: none; }
+[data-theme="light"] .icon-moon { display: block; }
+
+/* Voice toggle icon visibility */
+.icon-voice-off { display: none; }
+.icon-voice-on { display: block; }
+.btn-icon.voice-active .icon-voice-on { display: block; }
+.btn-icon:not(.voice-active) .icon-voice-off { display: none; }
+
+/* ----- Chat Messages ----- */
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 24px 8px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    scroll-behavior: smooth;
+}
+
+.chat-messages::-webkit-scrollbar {
+    width: 5px;
+}
+.chat-messages::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+}
+.chat-messages::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: var(--radius-full);
+}
+.chat-messages::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-hover);
+}
+
+/* ----- Message Bubbles ----- */
+.message {
+    display: flex;
+    gap: 12px;
+    max-width: 85%;
+    animation: messageSlideIn 0.3s ease-out;
+}
+
+@keyframes messageSlideIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.message.user {
+    align-self: flex-end;
+    flex-direction: row-reverse;
+}
+
+.message.bot {
+    align-self: flex-start;
+}
+
+.message-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    letter-spacing: 0.05em;
+}
+
+.message.bot .message-avatar {
+    background: var(--accent-gradient);
+    color: var(--text-user-bubble);
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="light"] .message.bot .message-avatar {
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.06);
+}
+
+.message.user .message-avatar {
+    background: var(--accent-subtle);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-primary);
+}
+
+.message-content {
+    padding: 14px 18px;
+    border-radius: var(--radius-lg);
+    line-height: 1.65;
+    font-size: 0.925rem;
+    position: relative;
+}
+
+.message.bot .message-content {
+    background: var(--bg-bot-bubble);
+    color: var(--text-bot-bubble);
+    border: 1px solid var(--border-primary);
+    border-bottom-left-radius: var(--radius-sm);
+}
+
+.message.user .message-content {
+    background: var(--bg-user-bubble);
+    color: var(--text-user-bubble);
+    border-bottom-right-radius: var(--radius-sm);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.message-content p { margin-bottom: 8px; }
+.message-content p:last-child { margin-bottom: 0; }
+
+.message-content strong {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.message.user .message-content strong {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.message-content ul,
+.message-content ol {
+    margin: 8px 0;
+    padding-left: 20px;
+}
+
+.message-content li { margin-bottom: 4px; }
+
+.message-content code {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    background: var(--accent-subtle);
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid var(--border-primary);
+}
+
+/* Speaker button on bot messages */
+.msg-speak-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 8px;
+    padding: 4px 10px;
+    font-size: 0.7rem;
+    font-family: var(--font-primary);
+    color: var(--text-tertiary);
+    background: var(--accent-subtle);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.msg-speak-btn:hover {
+    color: var(--text-primary);
+    background: var(--bg-chip-hover);
+}
+
+.msg-speak-btn.speaking {
+    color: var(--speaker-active);
+    border-color: var(--speaker-active);
+    background: rgba(74, 222, 128, 0.08);
+}
+
+.message-time {
+    font-size: 0.68rem;
+    color: var(--text-tertiary);
+    margin-top: 6px;
+    text-align: right;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.message.bot .message-time {
+    text-align: left;
+}
+
+/* ----- Welcome Message ----- */
+.welcome-message {
+    text-align: center;
+    padding: 40px 20px;
+    animation: fadeIn 0.6s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.welcome-logo {
+    width: 72px;
+    height: 72px;
+    margin: 0 auto 20px;
+}
+
+.welcome-message h2 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    background: var(--accent-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+}
+
+.welcome-message p {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    max-width: 460px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+.welcome-features {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin-top: 24px;
+    flex-wrap: wrap;
+}
+
+.welcome-feature {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: var(--accent-subtle);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-full);
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.welcome-feature svg {
+    width: 16px;
+    height: 16px;
+    opacity: 0.6;
+}
+
+/* ----- Typing Indicator ----- */
+.typing-indicator {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 8px 0;
+}
+
+.typing-indicator span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text-tertiary);
+    animation: typingBounce 1.2s ease-in-out infinite;
+}
+
+.typing-indicator span:nth-child(2) { animation-delay: 0.15s; }
+.typing-indicator span:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes typingBounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.3; }
+    30% { transform: translateY(-6px); opacity: 0.8; }
+}
+
+/* ----- Suggestions Bar ----- */
+.suggestions-bar {
+    display: flex;
+    gap: 8px;
+    padding: 8px 24px 4px;
+    overflow-x: auto;
+    flex-shrink: 0;
+    scrollbar-width: none;
+}
+
+.suggestions-bar::-webkit-scrollbar { display: none; }
+
+.suggestion-chip {
+    flex-shrink: 0;
+    padding: 8px 16px;
+    font-size: 0.8rem;
+    font-family: var(--font-primary);
+    font-weight: 500;
+    color: var(--text-chip);
+    background: var(--bg-chip);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    white-space: nowrap;
+}
+
+.suggestion-chip:hover {
+    background: var(--bg-chip-hover);
+    border-color: var(--text-tertiary);
+    color: var(--text-primary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.suggestion-chip:active { transform: translateY(0); }
+
+/* ----- Input Area ----- */
+.chat-input-area {
+    padding: 12px 24px 16px;
+    background: var(--bg-glass);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-top: 1px solid var(--border-secondary);
+    flex-shrink: 0;
+}
+
+.input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-input);
+    border: 1.5px solid var(--border-input);
+    border-radius: var(--radius-lg);
+    padding: 4px 6px 4px 18px;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.input-wrapper:focus-within {
+    border-color: var(--border-input-focus);
+    box-shadow: 0 0 0 3px var(--accent-subtle), var(--shadow-glow);
+}
+
+#userInput {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-family: var(--font-primary);
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    padding: 12px 0;
+}
+
+#userInput::placeholder { color: var(--text-tertiary); }
+
+.send-btn, .mic-btn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.send-btn {
+    background: var(--accent-gradient);
+    color: var(--text-user-bubble);
+}
+
+.send-btn:hover {
+    transform: scale(1.08);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.send-btn:active { transform: scale(0.95); }
+
+.mic-btn {
+    background: var(--accent-subtle);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-primary);
+}
+
+.mic-btn:hover {
+    color: var(--text-primary);
+    background: var(--bg-chip-hover);
+}
+
+.mic-btn.recording {
+    background: rgba(255, 68, 68, 0.15);
+    color: var(--mic-active);
+    border-color: var(--mic-active);
+    animation: micPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes micPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.3); }
+    50% { box-shadow: 0 0 0 8px rgba(255, 68, 68, 0); }
+}
+
+.mic-icon-active { display: none; }
+.mic-btn.recording .mic-icon-default { display: none; }
+.mic-btn.recording .mic-icon-active { display: block; }
+
+.input-hint {
+    font-size: 0.7rem;
+    color: var(--text-tertiary);
+    text-align: center;
+    margin-top: 8px;
+    letter-spacing: 0.02em;
+}
+
+/* ----- Voice Overlay ----- */
+.voice-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(20px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.voice-overlay.active {
+    display: flex;
+    animation: fadeIn 0.3s ease;
+}
+
+.voice-overlay-content {
+    text-align: center;
+}
+
+.voice-rings {
+    position: relative;
+    width: 140px;
+    height: 140px;
+    margin: 0 auto 24px;
+}
+
+.voice-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 2px solid var(--voice-ring);
+    animation: ringPulse 2s ease-in-out infinite;
+}
+
+.ring-2 {
+    inset: -15px;
+    animation-delay: 0.3s;
+    opacity: 0.6;
+}
+
+.ring-3 {
+    inset: -30px;
+    animation-delay: 0.6s;
+    opacity: 0.3;
+}
+
+@keyframes ringPulse {
+    0%, 100% { transform: scale(1); opacity: 0.6; }
+    50% { transform: scale(1.1); opacity: 0.2; }
+}
+
+.voice-mic-icon {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+}
+
+.voice-status {
+    color: #ffffff;
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+.voice-transcript {
+    color: #999999;
+    font-size: 0.9rem;
+    min-height: 24px;
+    font-style: italic;
+}
+
+.voice-cancel-btn {
+    margin-top: 24px;
+    padding: 10px 28px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--radius-full);
+    color: #ffffff;
+    font-family: var(--font-primary);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.voice-cancel-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* ----- Responsive ----- */
+@media (max-width: 640px) {
+    .chat-header { padding: 12px 16px; }
+    .header-text h1 { font-size: 1.05rem; }
+    .header-subtitle { font-size: 0.65rem; }
+    .chat-messages { padding: 16px 12px 8px 12px; }
+    .message { max-width: 92%; }
+    .suggestions-bar { padding: 8px 12px 4px; }
+    .chat-input-area { padding: 10px 12px 14px; }
+    .welcome-message h2 { font-size: 1.3rem; }
+    .welcome-logo { width: 56px; height: 56px; }
+    .welcome-features { gap: 8px; }
+    .welcome-feature { padding: 6px 12px; font-size: 0.72rem; }
+}
+
+@media (max-width: 380px) {
+    .logo-icon { width: 36px; height: 36px; }
+    .message-avatar { width: 28px; height: 28px; font-size: 0.7rem; }
+    .header-right { gap: 4px; }
+    .btn-icon { width: 34px; height: 34px; }
+}
+
+</style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="chat-header">
+            <div class="header-left">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="20" cy="20" r="18" stroke="url(#grad1)" stroke-width="2" fill="none"/>
+                        <circle cx="20" cy="20" r="10" stroke="url(#grad2)" stroke-width="1.2" fill="none" opacity="0.5"/>
+                        <circle cx="20" cy="12" r="3" fill="url(#grad1)"/>
+                        <circle cx="13" cy="24" r="3" fill="url(#grad2)"/>
+                        <circle cx="27" cy="24" r="3" fill="url(#grad1)"/>
+                        <line x1="20" y1="12" x2="13" y2="24" stroke="url(#grad2)" stroke-width="1" opacity="0.4"/>
+                        <line x1="20" y1="12" x2="27" y2="24" stroke="url(#grad1)" stroke-width="1" opacity="0.4"/>
+                        <line x1="13" y1="24" x2="27" y2="24" stroke="url(#grad2)" stroke-width="1" opacity="0.4"/>
+                        <defs>
+                            <linearGradient id="grad1" x1="0" y1="0" x2="40" y2="40">
+                                <stop offset="0%" stop-color="#ffffff"/>
+                                <stop offset="100%" stop-color="#888888"/>
+                            </linearGradient>
+                            <linearGradient id="grad2" x1="40" y1="0" x2="0" y2="40">
+                                <stop offset="0%" stop-color="#aaaaaa"/>
+                                <stop offset="100%" stop-color="#ffffff"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <div class="header-text">
+                    <h1>ChurnQ Assistant</h1>
+                    <p class="header-subtitle">AI-Assisted Churn Prediction &middot; Quantum Computing</p>
+                </div>
+            </div>
+            <div class="header-right">
+                <button class="btn-icon" id="voiceToggleBtn" title="Toggle voice responses">
+                    <svg class="icon-voice-on" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                    <svg class="icon-voice-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+                </button>
+                <button class="btn-icon" id="clearChatBtn" title="Clear chat">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                </button>
+                <button class="btn-icon" id="themeToggleBtn" title="Toggle theme">
+                    <svg class="icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                    <svg class="icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Chat Messages Area -->
+        <main class="chat-messages" id="chatMessages">
+            <!-- Welcome message will be injected by JS -->
+        </main>
+
+        <!-- Suggested Questions -->
+        <div class="suggestions-bar" id="suggestionsBar">
+            <button class="suggestion-chip" data-question="What is ChurnQ?">What is ChurnQ?</button>
+            <button class="suggestion-chip" data-question="Who are the team members?">Team Members</button>
+            <button class="suggestion-chip" data-question="Who is the project guide?">Project Guide</button>
+            <button class="suggestion-chip" data-question="What are the experimental results?">Results & Recall</button>
+            <button class="suggestion-chip" data-question="Tell me about the dirty datasets">Dirty Test Datasets</button>
+            <button class="suggestion-chip" data-question="What tech stack is used?">Tech Stack</button>
+            <button class="suggestion-chip" data-question="What is the methodology?">Methodology</button>
+            <button class="suggestion-chip" data-question="What are key viva questions?">Viva Q&A</button>
+        </div>
+
+        <!-- Input Area -->
+        <footer class="chat-input-area">
+            <div class="input-wrapper">
+                <input type="text" id="userInput" placeholder="Ask about ChurnQ..." autocomplete="off">
+                <button class="mic-btn" id="micBtn" title="Voice input">
+                    <svg class="mic-icon-default" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                    <svg class="mic-icon-active" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+                </button>
+                <button class="send-btn" id="sendBtn" title="Send message">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                </button>
+            </div>
+            <p class="input-hint">This chatbot only answers questions about the ChurnQ project. &nbsp;🎤 Voice enabled</p>
+        </footer>
+    </div>
+
+    <!-- Particles background canvas -->
+    <canvas id="particlesCanvas"></canvas>
+
+    <!-- Voice listening overlay -->
+    <div class="voice-overlay" id="voiceOverlay">
+        <div class="voice-overlay-content">
+            <div class="voice-rings">
+                <div class="voice-ring ring-1"></div>
+                <div class="voice-ring ring-2"></div>
+                <div class="voice-ring ring-3"></div>
+                <div class="voice-mic-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                </div>
+            </div>
+            <p class="voice-status" id="voiceStatus">Listening...</p>
+            <p class="voice-transcript" id="voiceTranscript"></p>
+            <button class="voice-cancel-btn" id="voiceCancelBtn">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+/* ========================================================================
+   ChurnQ Project Chatbot — app.js
+   Knowledge base, intent matching, scope guard, voice assistant, and UI.
+   This chatbot ONLY answers questions about the ChurnQ project.
+   ======================================================================== */
+
+// ─── ChurnQ Knowledge Base ────────────────────────────────────────────────────
+const KNOWLEDGE_BASE = {
+    overview: {
+        keywords: ["what is churnq", "churnq", "about", "overview", "project", "introduction", "tell me about", "describe", "explain the project", "what does churnq do", "summary", "brief"],
+        answer: `<strong>ChurnQ</strong> is an end-to-end, AI-assisted decision-support platform for <strong>telecom customer churn prediction</strong>, built using <strong>Quantum Computing</strong>.
+
+<p>It combines a <strong>human-in-the-loop</strong>, business-rule-based preprocessing pipeline with a <strong>Variational Quantum Classifier (VQC)</strong> — benchmarked against a classical SVM baseline — and extends the pipeline into:</p>
+<ul>
+<li>Behavioral customer segmentation</li>
+<li>AI-generated retention strategies (via Google Gemini API)</li>
+<li>An interactive Power BI dashboard</li>
+<li>A natural-language AI chatbot for querying results</li>
+</ul>
+<p>The full project title is: <strong>"AI-Assisted Customer Churn Prediction for Telecom Using Quantum Computing"</strong></p>`
+    },
+
+    team: {
+        keywords: ["team", "members", "who made", "who created", "who built", "developers", "students", "group", "authors", "submitted by", "names", "saee", "khushi", "nandini", "harshad"],
+        answer: `<strong>ChurnQ Team Members:</strong>
+<ul>
+<li><strong>Saee Apture</strong> — Roll No. 23016044</li>
+<li><strong>Khushi Patankar</strong> — Roll No. 23016006</li>
+<li><strong>Nandini Chandurkar</strong> — Roll No. 23016024</li>
+<li><strong>Harshad Patekar</strong> — Roll No. 23016054</li>
+</ul>
+<p><strong>Department:</strong> Computer Science and Business Systems</p>
+<p><strong>College:</strong> St. Vincent Pallotti College of Engineering and Technology, Nagpur — 441108</p>
+<p><strong>Session:</strong> 2026–2027</p>`
+    },
+
+    problem_statement: {
+        keywords: ["problem", "problem statement", "issue", "challenge", "gap", "why", "motivation", "need"],
+        answer: `<strong>Problem Statement:</strong>
+<p>Customer churn causes substantial and recurring revenue loss in the telecom sector. Most existing approaches have <strong>two critical gaps</strong>:</p>
+<ol>
+<li><strong>Blind Outlier Removal:</strong> Conventional preprocessing removes statistical outliers using IQR or Z-score without verifying whether the flagged values are genuine business scenarios. A high-paying, long-tenure customer may be "unusual" statistically but is actually a highly valuable record.</li>
+<li><strong>Prediction-Only Systems:</strong> Most systems output a churn probability but offer no explanation of <em>why</em> a customer is at risk, no behavioral context, and no actionable retention guidance.</li>
+</ol>
+<p>ChurnQ addresses both gaps by combining <strong>AI-assisted, human-supervised preprocessing</strong> with a <strong>Quantum Variational Classifier</strong>, behavioral segmentation, and AI-generated retention strategies within a single interactive platform.</p>`
+    },
+
+    objectives: {
+        keywords: ["objectives", "goals", "aims", "objective", "purpose", "target"],
+        answer: `<strong>Project Objectives:</strong>
+<ol>
+<li><strong>AI-assisted preprocessing:</strong> Design a human-in-the-loop pipeline that detects missing values, duplicates, and anomalies using business rules rather than blind statistical removal, preserving genuine customer records.</li>
+<li><strong>Quantum VQC Model:</strong> Implement a Variational Quantum Classifier (VQC) using Qiskit — with ZZFeatureMap encoding and COBYLA optimizer — benchmarked against a classical SVM baseline on Mutual-Information-selected features.</li>
+<li><strong>Behavioral Segmentation:</strong> Perform customer segmentation based on tenure, charges, contract type, and churn risk. Generate personalized, AI-driven retention strategies using the Gemini API.</li>
+<li><strong>Visualization & Chatbot:</strong> Visualize results through an interactive Power BI dashboard, supported by a natural-language AI chatbot for querying results.</li>
+</ol>`
+    },
+
+    scope: {
+        keywords: ["scope", "boundary", "boundaries", "coverage", "what it covers"],
+        answer: `<strong>Scope of ChurnQ:</strong>
+<p>ChurnQ covers the <strong>complete pipeline</strong> from raw telecom customer data to actionable retention insight:</p>
+<ul>
+<li>Dataset upload and validation</li>
+<li>AI-assisted and human-supervised preprocessing (missing values, duplicates, anomalies, negative values)</li>
+<li>Feature encoding and scaling</li>
+<li>Quantum-assisted feature selection</li>
+<li>Classical-versus-quantum churn prediction</li>
+<li>Behavioral segmentation</li>
+<li>AI-generated retention strategy suggestions</li>
+<li>Visualization through a Power BI dashboard and chatbot</li>
+</ul>
+<p>The project is benchmarked on the publicly available <strong>IBM Telco Customer Churn dataset</strong>, and the quantum model runs on Qiskit's <strong>StatevectorSimulator</strong> (not physical quantum hardware).</p>
+<p><strong>Primary beneficiaries:</strong> Telecom service providers, customer-retention teams, and business analysts.</p>`
+    },
+
+    limitations: {
+        keywords: ["limitations", "not covered", "future", "future work", "extensions", "cannot", "doesn't cover", "not included"],
+        answer: `<strong>Limitations & Future Work:</strong>
+<p>The following are <strong>not covered</strong> in the current scope and are identified as <strong>future extensions</strong>:</p>
+<ul>
+<li>Real-time or streaming churn detection</li>
+<li>Deployment on physical quantum processors</li>
+<li>Multi-lingual chatbot support</li>
+<li>Generalization to non-telecom domains</li>
+</ul>
+<p>These represent directions for future research and development beyond the current academic demonstration.</p>`
+    },
+
+    beneficiaries: {
+        keywords: ["beneficiaries", "who benefits", "who uses", "users", "target audience", "for whom", "customers"],
+        answer: `<strong>Primary Beneficiaries of ChurnQ:</strong>
+<ul>
+<li><strong>Telecom service providers</strong> — to reduce customer churn and improve revenue</li>
+<li><strong>Customer-retention teams</strong> — for actionable, AI-generated retention strategies per customer segment</li>
+<li><strong>Business analysts</strong> — who need both accurate churn predictions and interpretable retention guidance</li>
+</ul>
+<p>The project also serves as an <strong>academic demonstration</strong> of applying Quantum Machine Learning to a real-world business analytics problem.</p>`
+    },
+
+    tech_stack: {
+        keywords: ["tech", "technology", "stack", "tools", "framework", "language", "libraries", "software", "built with", "developed with", "programming"],
+        answer: `<strong>Technology Stack:</strong>
+<ul>
+<li><strong>Programming Language:</strong> Python 3.x</li>
+<li><strong>Web Framework:</strong> Flask</li>
+<li><strong>Data Processing:</strong> Pandas, NumPy</li>
+<li><strong>Machine Learning:</strong> Scikit-learn (SVM, encoding, scaling, Mutual Information)</li>
+<li><strong>Quantum Computing:</strong> Qiskit, Qiskit Machine Learning (ZZFeatureMap, VQC, COBYLA, StatevectorSimulator)</li>
+<li><strong>AI Integration:</strong> Google Gemini API (<code>google-genai</code> SDK) — for recommendations, retention strategies, and the chatbot</li>
+<li><strong>Frontend:</strong> HTML, CSS, JavaScript</li>
+<li><strong>Visualization:</strong> Power BI Desktop</li>
+<li><strong>Development:</strong> VS Code, Git/GitHub</li>
+</ul>`
+    },
+
+    methodology: {
+        keywords: ["methodology", "method", "workflow", "pipeline", "process", "how does it work", "steps", "architecture", "flow", "planning", "approach"],
+        answer: `<strong>ChurnQ Methodology (Sequential Modular Pipeline):</strong>
+<ol>
+<li><strong>Dataset Upload & Validation:</strong> User uploads a telecom customer dataset (CSV/XLSX/ODS); file format and size are validated.</li>
+<li><strong>Loading & Type Correction:</strong> Dataset is loaded into a Pandas DataFrame; numeric-as-string columns are auto-detected and corrected.</li>
+<li><strong>Preprocessing:</strong> Missing values filled (median for numeric, mode for categorical), duplicates removed, anomalies/negative values detected using business rules (domain boundaries, 10× median threshold).</li>
+<li><strong>AI Recommendation & Human Review:</strong> Gemini API suggests handling actions for flagged columns with stated reasons; user reviews and approves/overrides in the Anomaly Review Center.</li>
+<li><strong>Encoding & Scaling:</strong> Binary and categorical features encoded (Label/One-Hot), numeric features standardized (StandardScaler).</li>
+<li><strong>Quantum Feature Selection:</strong> Mutual Information ranks features by relevance to churn; top 8 selected to match the 8-qubit VQC circuit.</li>
+<li><strong>Model Training & Comparison:</strong> Classical SVM baseline and Quantum VQC trained on class-weighted data; compared on accuracy, precision, recall, and F1-score.</li>
+<li><strong>Segmentation & Retention Strategy:</strong> Customers predicted to churn are grouped into behavioral segments; Gemini API generates personalized retention strategy per segment.</li>
+<li><strong>Visualization:</strong> Results exported to interactive Power BI dashboard and queryable via AI chatbot.</li>
+</ol>`
+    },
+
+    vqc: {
+        keywords: ["vqc", "variational quantum classifier", "quantum classifier", "quantum model", "quantum circuit", "qubit", "qubits"],
+        answer: `<strong>Variational Quantum Classifier (VQC):</strong>
+<p>The VQC is a <strong>hybrid quantum-classical machine learning model</strong> that uses a parameterized quantum circuit for classification. In ChurnQ:</p>
+<ul>
+<li><strong>Feature Encoding:</strong> ZZFeatureMap maps the top 8 classical features into quantum state space</li>
+<li><strong>Optimizer:</strong> COBYLA (Constrained Optimization BY Linear Approximation) optimizes the circuit parameters</li>
+<li><strong>Backend:</strong> Qiskit's StatevectorSimulator simulates the quantum circuit</li>
+<li><strong>Qubits:</strong> 8-qubit circuit (matching the 8 features selected by Mutual Information)</li>
+<li><strong>Training:</strong> Class-weighted data is used to handle class imbalance</li>
+<li><strong>Benchmark:</strong> Compared against a classical SVM baseline on accuracy, precision, recall, and F1-score</li>
+</ul>`
+    },
+
+    zzfeaturemap: {
+        keywords: ["zzfeaturemap", "zz feature map", "feature map", "feature encoding", "quantum encoding", "quantum feature"],
+        answer: `<strong>ZZFeatureMap:</strong>
+<p>ZZFeatureMap is a <strong>quantum feature-encoding technique</strong> that maps classical data into a quantum state space. It is used in ChurnQ to encode the top 8 Mutual-Information-selected features into the 8-qubit VQC quantum circuit.</p>
+<p>The ZZ in the name refers to the ZZ entangling gates used to create correlations between qubits, allowing the quantum model to capture feature interactions that classical models might miss.</p>`
+    },
+
+    mutual_information: {
+        keywords: ["mutual information", "feature selection", "feature ranking", "mi", "features selected"],
+        answer: `<strong>Mutual Information Feature Selection:</strong>
+<p>Mutual Information is a <strong>statistical measure</strong> used to rank features by how informative they are for predicting churn. In ChurnQ:</p>
+<ul>
+<li>All features are scored using Mutual Information against the churn label</li>
+<li>The <strong>top 8 features</strong> are selected to match the 8-qubit VQC circuit capacity</li>
+<li>These same features are used for both the VQC and the SVM baseline to ensure fair comparison</li>
+</ul>`
+    },
+
+    churn: {
+        keywords: ["churn", "customer churn", "what is churn", "definition of churn", "churn meaning", "subscriber loss"],
+        answer: `<strong>Churn</strong> refers to a customer <strong>discontinuing a telecom service</strong> — i.e., switching to a competing provider or canceling their subscription.
+<p>Since acquiring a new customer is significantly more expensive than retaining an existing one, even a small reduction in churn translates into substantial revenue improvement. This is why telecom operators invest heavily in <strong>predictive analytics</strong> to identify at-risk customers before they leave.</p>`
+    },
+
+    segmentation: {
+        keywords: ["segmentation", "behavioral segmentation", "customer segment", "grouping", "clusters", "behavioral"],
+        answer: `<strong>Behavioral Customer Segmentation:</strong>
+<p>Unlike traditional <em>demographic</em> segmentation, ChurnQ uses <strong>behavioral segmentation</strong> — grouping customers by their actual usage patterns rather than demographic attributes.</p>
+<p>Segmentation is based on:</p>
+<ul>
+<li><strong>Tenure</strong> (how long the customer has been subscribed)</li>
+<li><strong>Charges</strong> (monthly and total)</li>
+<li><strong>Contract type</strong></li>
+<li><strong>Churn risk score</strong></li>
+</ul>
+<p>This ensures that retention strategies map directly to customer usage patterns, making them more actionable.</p>`
+    },
+
+    retention: {
+        keywords: ["retention", "retention strategy", "strategies", "prevent churn", "keep customers", "reduce churn", "gemini", "ai generated"],
+        answer: `<strong>AI-Generated Retention Strategies:</strong>
+<p>After behavioral segmentation, ChurnQ uses the <strong>Google Gemini API</strong> to generate personalized, AI-driven retention strategies for each at-risk customer segment.</p>
+<p>This closes the loop from prediction to <strong>actionable business decisions</strong> — the system doesn't just predict <em>who</em> will churn, but recommends <em>what to do</em> about it.</p>`
+    },
+
+    preprocessing: {
+        keywords: ["preprocessing", "data cleaning", "anomaly", "outlier", "missing values", "duplicates", "anomaly review", "human in the loop", "business rules"],
+        answer: `<strong>AI-Assisted Preprocessing Pipeline:</strong>
+<p>ChurnQ replaces blind statistical outlier removal with an <strong>explainable, business-rule-based anomaly detection</strong> system with human review:</p>
+<ul>
+<li><strong>Missing values:</strong> Filled using median (numeric) or mode (categorical)</li>
+<li><strong>Duplicates:</strong> Automatically removed</li>
+<li><strong>Anomaly detection:</strong> Uses domain boundaries, 10× median threshold, and per-column negative-value thresholds (not IQR/Z-score)</li>
+<li><strong>AI Recommendation:</strong> Gemini API suggests a handling action for each flagged column with a stated reason</li>
+<li><strong>Human Review:</strong> The user reviews and approves or overrides each recommendation in the <strong>Anomaly Review Center</strong></li>
+</ul>
+<p>This preserves genuine, high-value customer records that statistical methods would incorrectly remove.</p>`
+    },
+
+    svm: {
+        keywords: ["svm", "support vector machine", "classical model", "baseline", "comparison", "benchmark"],
+        answer: `<strong>SVM Baseline:</strong>
+<p>ChurnQ trains a classical <strong>Support Vector Machine (SVM)</strong> as a baseline model using Scikit-learn. Both the SVM and the Quantum VQC are:</p>
+<ul>
+<li>Trained on the same <strong>Mutual-Information-selected top 8 features</strong></li>
+<li>Trained on <strong>class-weighted data</strong> to handle churn class imbalance</li>
+<li>Compared on <strong>accuracy, precision, recall, and F1-score</strong></li>
+</ul>
+<p>This provides a fair comparison between classical and quantum approaches to churn prediction.</p>`
+    },
+
+    dashboard: {
+        keywords: ["dashboard", "power bi", "visualization", "visualize", "charts", "graphs", "report", "analytics"],
+        answer: `<strong>Power BI Dashboard:</strong>
+<p>ChurnQ exports all results — preprocessing outcomes, churn predictions, segmentation, and retention insights — to an <strong>interactive Power BI dashboard</strong>.</p>
+<p>This allows telecom operators to visually explore the data, drill down into customer segments, and view AI-generated retention recommendations in a business-friendly format.</p>`
+    },
+
+    hardware: {
+        keywords: ["hardware", "requirements", "system requirements", "computer", "ram", "processor", "storage", "specs"],
+        answer: `<strong>Hardware Requirements:</strong>
+<ul>
+<li><strong>Processor:</strong> Intel i5 (or equivalent) or higher</li>
+<li><strong>RAM:</strong> 8 GB minimum (16 GB recommended for smoother quantum-simulation performance)</li>
+<li><strong>Storage:</strong> At least 20 GB of free disk space</li>
+<li><strong>Internet:</strong> Required for Gemini API calls</li>
+<li><strong>Display:</strong> Standard monitor for dashboard and web-interface visualization</li>
+</ul>`
+    },
+
+    software: {
+        keywords: ["software requirements", "software", "install", "setup", "dependencies"],
+        answer: `<strong>Software Requirements:</strong>
+<ul>
+<li><strong>Python 3.x</strong></li>
+<li><strong>Flask</strong> (web framework)</li>
+<li><strong>Pandas & NumPy</strong> (data processing)</li>
+<li><strong>Scikit-learn</strong> (SVM, encoding, scaling, Mutual Information)</li>
+<li><strong>Qiskit & Qiskit ML</strong> (ZZFeatureMap, VQC, COBYLA, StatevectorSimulator)</li>
+<li><strong>Google Gemini API</strong> (<code>google-genai</code> SDK)</li>
+<li><strong>HTML, CSS, JavaScript</strong> (frontend)</li>
+<li><strong>Power BI Desktop</strong> (visualization)</li>
+<li><strong>VS Code, Git/GitHub</strong> (development)</li>
+</ul>`
+    },
+
+    dataset: {
+        keywords: ["dataset", "data", "upload", "csv", "xlsx", "ods", "input", "file format", "telecom data", "ibm", "ibm telco"],
+        answer: `<strong>Dataset — IBM Telco Customer Churn:</strong>
+<p>ChurnQ is benchmarked on the publicly available <strong>IBM Telco Customer Churn dataset</strong>.</p>
+<p>The platform accepts telecom customer datasets in <strong>CSV, XLSX, or ODS</strong> formats. Upon upload:</p>
+<ul>
+<li>File format and size are validated</li>
+<li>The dataset is loaded into a Pandas DataFrame</li>
+<li>Numeric-as-string columns are auto-detected and corrected</li>
+<li>The preprocessing pipeline then handles missing values, duplicates, and anomalies</li>
+</ul>`
+    },
+
+    cobyla: {
+        keywords: ["cobyla", "optimizer", "optimization"],
+        answer: `<strong>COBYLA Optimizer:</strong>
+<p><strong>COBYLA</strong> (Constrained Optimization BY Linear Approximation) is the optimization algorithm used to train the VQC quantum circuit in ChurnQ.</p>
+<p>It iteratively adjusts the parameterized quantum circuit's gate angles to minimize the classification loss, working in the hybrid quantum-classical training loop.</p>`
+    },
+
+    literature: {
+        keywords: ["literature", "survey", "references", "research", "papers", "citation", "ieee", "related work"],
+        answer: `<strong>Literature Survey:</strong>
+<p>The literature survey covers existing approaches in <strong>churn prediction, customer segmentation, explainable AI, and Quantum Machine Learning</strong>. ChurnQ references <strong>13 research papers</strong>:</p>
+<ul>
+<li><strong>Explainable AI for churn:</strong> Asif et al. (2025) — XAI-Churn TriBoost</li>
+<li><strong>ML churn analysis:</strong> Chen et al. (2025), Wagh et al. (2024), Yang (2024), Adeniran et al. (2024), Adekunle et al. (2023)</li>
+<li><strong>Customer segmentation:</strong> Ibrahim & Deepa (2025), Liu (2023), Tabianan et al. (2022), Behavioral Segmentation (2024)</li>
+<li><strong>Quantum computing:</strong> Bhat et al. (2022), Khurana (2022)</li>
+<li><strong>Integrated frameworks:</strong> Wu et al. (2021)</li>
+</ul>
+<p>Key finding: Most existing approaches focus on prediction accuracy but provide <strong>limited support for explainable preprocessing, business-oriented decision-making, and practical telecom-specific quantum applications</strong>. ChurnQ integrates all of these into a comprehensive solution.</p>`
+    },
+
+    college: {
+        keywords: ["college", "university", "svpcet", "pallotti", "nagpur", "department", "institution"],
+        answer: `<strong>Institution Details:</strong>
+<p><strong>College:</strong> St. Vincent Pallotti College of Engineering and Technology (SVPCET)</p>
+<p><strong>Location:</strong> Nagpur — 441108</p>
+<p><strong>Department:</strong> Computer Science and Business Systems</p>
+<p><strong>Session:</strong> 2026–2027</p>`
+    },
+
+    flask: {
+        keywords: ["flask", "web app", "web application", "web framework", "frontend", "backend", "html css"],
+        answer: `<strong>Flask Web Application:</strong>
+<p>ChurnQ is developed as a <strong>full-stack Flask web application</strong>:</p>
+<ul>
+<li><strong>Backend:</strong> Python Flask handles data processing, model training, API calls, and business logic</li>
+<li><strong>Frontend:</strong> HTML, CSS, and JavaScript for the user interface</li>
+<li>Users interact with the platform through the browser — uploading datasets, reviewing preprocessing, viewing results, and chatting with the AI assistant</li>
+</ul>`
+    },
+
+    encoding: {
+        keywords: ["encoding", "label encoding", "one hot", "scaling", "standard scaler", "standardization"],
+        answer: `<strong>Encoding & Scaling:</strong>
+<p>After preprocessing and human review, ChurnQ encodes and scales the features:</p>
+<ul>
+<li><strong>Binary features:</strong> Label Encoding</li>
+<li><strong>Categorical features:</strong> One-Hot Encoding</li>
+<li><strong>Numeric features:</strong> StandardScaler (standardization)</li>
+</ul>
+<p>This prepares the data for both the classical SVM and the Quantum VQC models.</p>`
+    },
+
+    qiskit: {
+        keywords: ["qiskit", "quantum computing", "quantum", "statevector", "simulator"],
+        answer: `<strong>Qiskit in ChurnQ:</strong>
+<p><strong>Qiskit</strong> is IBM's open-source quantum computing framework used in ChurnQ for:</p>
+<ul>
+<li><strong>ZZFeatureMap:</strong> Quantum feature encoding</li>
+<li><strong>VQC (Variational Quantum Classifier):</strong> The quantum ML model</li>
+<li><strong>COBYLA optimizer:</strong> Circuit parameter optimization</li>
+<li><strong>StatevectorSimulator:</strong> Backend for simulating the quantum circuit (no real quantum hardware needed)</li>
+<li><strong>Qiskit Machine Learning:</strong> High-level ML module built on Qiskit</li>
+</ul>`
+    },
+
+    development_status: {
+        keywords: ["status", "progress", "completed", "done", "built", "modules completed", "current status", "development", "what is done", "what is built"],
+        answer: `<strong>Development Status:</strong>
+<p><strong>Completed Modules ✅ (14 of 21):</strong></p>
+<ol>
+<li>Dataset Upload + Validation</li>
+<li>Dataset Loader + Type Correction</li>
+<li>Dataset Summary (stat cards, color-coded)</li>
+<li>Missing Value Handling (median/mode)</li>
+<li>Duplicate Removal</li>
+<li>Anomaly Detection (10x median threshold)</li>
+<li>Negative Value Detection (two-level threshold)</li>
+<li>Missing Customer ID Detection</li>
+<li>AI Recommendation Engine (Gemini API + fallback + cache)</li>
+<li>Anomaly Review Center UI</li>
+<li>Outlier Actions Engine (three-pass logic)</li>
+<li>Encoding (Label + One-Hot)</li>
+<li>Feature Scaling (StandardScaler, 80/20 split)</li>
+<li>Quantum Feature Selection (Mutual Information, top 8)</li>
+</ol>
+<p><strong>Remaining Modules ⬜ (7):</strong></p>
+<ul>
+<li>Module 15: Classical SVM Baseline</li>
+<li>Module 16: Quantum VQC Prediction</li>
+<li>Module 17: Prediction Results + Comparison Page</li>
+<li>Module 18: Behavioral Customer Segmentation</li>
+<li>Module 19: AI Retention Strategy Engine</li>
+<li>Module 20: Power BI Dashboard</li>
+<li>Module 21: AI Chatbot</li>
+</ul>`
+    },
+
+    pipeline_flow: {
+        keywords: ["pipeline", "user journey", "flow", "route", "routes", "pages", "navigation", "how it works step by step", "user flow"],
+        answer: `<strong>ChurnQ Pipeline Flow (User Journey):</strong>
+<ol>
+<li><strong>/ (index.html)</strong> — Upload dataset</li>
+<li><strong>/upload</strong> — Load → type correct → summary → missing values → duplicates → save cleaned CSV</li>
+<li><strong>/result.html</strong> — View results → click "Proceed to Anomaly Review"</li>
+<li><strong>/anomaly-review/&lt;filename&gt;</strong> — Detect outliers → detect negatives → detect missing IDs → Gemini recommendations</li>
+<li><strong>anomaly_review.html</strong> — User reviews 3 sections → submits actions</li>
+<li><strong>/apply-actions/&lt;filename&gt;</strong> — Apply 3-pass actions → save processed CSV</li>
+<li><strong>preprocessing_complete.html</strong> → Proceed to Encoding</li>
+<li><strong>/encode/&lt;filename&gt;</strong> — Label Encode binary → One-Hot Encode multi-category → save encoded CSV + target</li>
+<li><strong>/scale/&lt;filename&gt;</strong> — StandardScaler → 80/20 split → save train/test .npy files</li>
+<li><strong>/feature-selection/&lt;filename&gt;</strong> — Mutual Information → top 8 features</li>
+<li><strong>/predict/&lt;filename&gt;</strong> — Classical SVM + Quantum VQC → comparison results</li>
+</ol>`
+    },
+
+    folder_structure: {
+        keywords: ["folder", "structure", "files", "directory", "project structure", "code structure", "file structure", "organization"],
+        answer: `<strong>Project Folder Structure:</strong>
+<ul>
+<li><strong>app.py</strong> — Main Flask application and route orchestration</li>
+<li><strong>config.py</strong> — Configuration settings, thresholds, API configuration</li>
+<li><strong>utils/</strong> — File validation and data checks</li>
+<li><strong>preprocessing/</strong> — Data ingestion, type correction, anomaly detection, AI recommendations, encoding, and scaling modules</li>
+<li><strong>quantum/</strong> — Feature selection and machine learning modules</li>
+<li><strong>retention/</strong> — Customer behavioral segmentation and retention strategies</li>
+<li><strong>chatbot/</strong> — Natural language conversational assistant</li>
+<li><strong>templates/</strong> — Glassmorphic HTML web templates</li>
+<li><strong>static/css/</strong> — Custom styling and responsive interface</li>
+<li><strong>uploads/ & processed/</strong> — File-based artifact storage for data passes</li>
+</ul>`
+    },
+
+    design_decisions: {
+        keywords: ["design decision", "why not iqr", "why 10x", "why not smote", "class weight", "why mutual information", "why not pca", "design choices", "decisions"],
+        answer: `<strong>Key Design Decisions:</strong>
+<ul>
+<li><strong>10x Median (NOT IQR):</strong> IQR incorrectly flags premium customers with high charges as outliers. 10x median only catches genuine fat-finger data entry errors (e.g., MonthlyCharges median=65, flags above 650 only).</li>
+<li><strong>Class Weights (NOT SMOTE):</strong> SMOTE creates synthetic records, contradicting our argument of preserving real behavioral data. Class weights adjust learning without fabricating data.</li>
+<li><strong>Mutual Information (NOT PCA):</strong> VQC needs exactly 8 features (8 qubits). MI scores each feature's predictive relevance to Churn directly, unlike PCA which creates abstract components.</li>
+<li><strong>Per-Column Negative Actions (NOT per-row):</strong> One action per column (Replace with Median / 0 / Delete Rows) — too many rows for per-row in large datasets.</li>
+<li><strong>Behavioral Segmentation (NOT demographic):</strong> Demographics don't reflect service usage. Behavioral features directly map to churn risk and actionable retention strategies.</li>
+</ul>`
+    },
+
+    algorithms: {
+        keywords: ["algorithm", "algorithms", "methods", "techniques", "what algorithms", "which algorithm", "all algorithms"],
+        answer: `<strong>Algorithms Used in ChurnQ:</strong>
+<ul>
+<li><strong>Type Correction:</strong> 99% threshold numeric detection (Custom)</li>
+<li><strong>Missing Values:</strong> Median / Mode Imputation (Pandas)</li>
+<li><strong>Anomaly Detection:</strong> Domain Rules + 10x Median (Custom)</li>
+<li><strong>Negative Values:</strong> Two-level threshold + per-column (Custom)</li>
+<li><strong>AI Recommendations:</strong> Gemini LLM (google-genai)</li>
+<li><strong>Encoding:</strong> Label + One-Hot Encoding (Scikit-learn)</li>
+<li><strong>Scaling:</strong> StandardScaler (Scikit-learn)</li>
+<li><strong>Feature Selection:</strong> Mutual Information (Scikit-learn)</li>
+<li><strong>Data Balancing:</strong> Class Weights (Scikit-learn)</li>
+<li><strong>Classical Model:</strong> SVM with RBF kernel (Scikit-learn)</li>
+<li><strong>Quantum Encoding:</strong> ZZFeatureMap (Qiskit)</li>
+<li><strong>Quantum Model:</strong> VQC (Qiskit ML)</li>
+<li><strong>Optimizer:</strong> COBYLA (Qiskit)</li>
+<li><strong>Segmentation:</strong> Rule-Based Behavioral (Custom)</li>
+<li><strong>Retention Strategy:</strong> Gemini LLM (google-genai)</li>
+</ul>`
+    },
+
+    dataset_details: {
+        keywords: ["ibm telco", "dataset details", "columns", "features", "rows", "how many", "input features", "target variable", "class imbalance", "7043"],
+        answer: `<strong>Dataset — IBM Telco Customer Churn:</strong>
+<p><strong>Size:</strong> ~7,043 rows, 21 columns</p>
+<p><strong>Target:</strong> Churn (Yes=1, No=0)</p>
+<p><strong>Class Imbalance:</strong> ~73% No, ~27% Yes</p>
+<p><strong>Input Features (19):</strong></p>
+<ul>
+<li><strong>Numeric:</strong> tenure, MonthlyCharges, TotalCharges</li>
+<li><strong>Categorical:</strong> Contract, PaymentMethod, InternetService</li>
+<li><strong>Binary:</strong> PaperlessBilling, PhoneService, MultipleLines, OnlineSecurity, OnlineBackup, DeviceProtection, TechSupport, StreamingTV, StreamingMovies, gender, SeniorCitizen, Partner, Dependents</li>
+</ul>
+<p><strong>Skipped:</strong> customerID (dropped during encoding)</p>`
+    },
+
+    customer_segments: {
+        keywords: ["segment", "segments", "customer segments", "types of customers", "premium", "at risk", "churner", "disengaged", "price sensitive", "new customer", "stable"],
+        answer: `<strong>Behavioral Customer Segments:</strong>
+<p>Based on tenure, MonthlyCharges, TotalCharges, Contract, number of services, and churn probability:</p>
+<ul>
+<li><strong>Premium:</strong> High charges, long tenure, many services</li>
+<li><strong>At-Risk Loyal:</strong> Long tenure, high value, but showing churn signal</li>
+<li><strong>Churner - Price Sensitive:</strong> High charges, month-to-month contract, short tenure</li>
+<li><strong>Churner - Disengaged:</strong> Low usage, few services</li>
+<li><strong>New Customer:</strong> Very short tenure, churn predicted</li>
+<li><strong>Stable Low-Value:</strong> Low charges, long tenure, low risk</li>
+</ul>`
+    },
+
+    retention_strategies: {
+        keywords: ["retention strategy", "retention strategies", "what to do", "how to retain", "prevent churn", "action plan", "business action", "vip", "loyalty", "discount"],
+        answer: `<strong>Retention Strategies per Segment:</strong>
+<ul>
+<li><strong>Premium:</strong> VIP outreach, loyalty rewards</li>
+<li><strong>At-Risk Loyal:</strong> Personalized retention call, service upgrade offer</li>
+<li><strong>Churner - Price Sensitive:</strong> Discounted plan, contract lock-in incentive</li>
+<li><strong>Churner - Disengaged:</strong> Re-engagement campaign, bundle offer</li>
+<li><strong>New Customer:</strong> Onboarding support, early loyalty discount</li>
+<li><strong>Stable Low-Value:</strong> Automated retention, upsell opportunity</li>
+</ul>
+<p>These strategies are generated by the <strong>Gemini API</strong> with personalized recommendations for each segment.</p>`
+    },
+
+    ui_design: {
+        keywords: ["ui", "design", "theme", "color", "colours", "font", "poppins", "glassmorphic", "glass", "stepper", "look and feel", "appearance"],
+        answer: `<strong>ChurnQ UI Design:</strong>
+<ul>
+<li><strong>Theme:</strong> Light glassmorphic with backdrop blur</li>
+<li><strong>Background:</strong> Gradient (#eef2ff → #f7f9fc → #e9eefc)</li>
+<li><strong>Primary Accent:</strong> #4a63d6 (blue)</li>
+<li><strong>Font:</strong> Poppins (Google Fonts)</li>
+<li><strong>Status Colors:</strong> Green (#1d9a5a) for good, Red (#d65a4a) for bad, Amber for warnings</li>
+<li><strong>Container:</strong> White with glassmorphism blur and subtle border</li>
+</ul>
+<p><strong>Stepper Navigation (5 steps):</strong></p>
+<ol>
+<li>Upload</li>
+<li>Clean</li>
+<li>Anomaly Review</li>
+<li>Quantum Prediction</li>
+<li>Dashboard</li>
+</ol>`
+    },
+
+    gemini_api: {
+        keywords: ["gemini", "api", "google genai", "genai", "api key", "gemini model", "flash lite", "quota", "fallback"],
+        answer: `<strong>Gemini API Integration:</strong>
+<ul>
+<li><strong>Package:</strong> google-genai (NOT google-generativeai — that is deprecated)</li>
+<li><strong>Model:</strong> gemini-2.0-flash-lite</li>
+<li><strong>Import:</strong> <code>from google import genai</code></li>
+<li><strong>Client:</strong> <code>client = genai.Client(api_key=GEMINI_API_KEY)</code></li>
+<li><strong>Call:</strong> <code>client.models.generate_content(model=GEMINI_MODEL, contents=prompt)</code></li>
+</ul>
+<p><strong>Fallback:</strong> If API quota is exceeded, rule-based logic runs automatically.</p>
+<p><strong>Caching:</strong> Recommendations are cached to JSON to avoid redundant API calls.</p>
+<p><strong>Quota:</strong> Free tier resets daily at midnight Pacific time.</p>`
+    },
+
+    viva: {
+        keywords: ["viva", "interview", "questions", "answers", "oral", "explain", "defend", "presentation", "faq", "frequently asked"],
+        answer: `<strong>Viva / FAQ Quick Answers:</strong>
+<ul>
+<li><strong>What does ChurnQ predict?</strong> — Whether a telecom customer will churn (leave) or stay — binary classification using VQC.</li>
+<li><strong>Why quantum computing?</strong> — ZZFeatureMap encodes features into quantum Hilbert space where VQC finds complex patterns classical SVM may miss.</li>
+<li><strong>Why 10x median instead of IQR?</strong> — IQR flags premium customers as outliers. 10x median only catches fat-finger data entry errors.</li>
+<li><strong>Why behavioral segmentation?</strong> — Demographics don't reflect service usage. Behavioral features directly map to churn risk and retention actions.</li>
+<li><strong>Why class weights not SMOTE?</strong> — SMOTE creates synthetic records contradicting our argument of preserving real behavioral data.</li>
+<li><strong>Why Mutual Information for feature selection?</strong> — VQC needs exactly 8 features (8 qubits). MI scores each feature's predictive relevance to Churn directly.</li>
+</ul>`
+    },
+
+    guide_and_faculty: {
+        keywords: ["guide", "mentor", "faculty", "hod", "principal", "pradnya moon", "praveen sen", "prashant maheshwary", "supervision", "who guided"],
+        answer: `<strong>Project Mentors & Leadership:</strong>
+<ul>
+<li><strong>Project Guide:</strong> Mrs. Pradnya S. Moon (Assistant Professor, Department of Computer Science and Business Systems)</li>
+<li><strong>Head of Department (HOD):</strong> Dr. Praveen H. Sen (Associate Professor & HOD, CSBS)</li>
+<li><strong>Principal:</strong> Dr. Prashant Maheshwary (St. Vincent Pallotti College of Engineering and Technology, Nagpur)</li>
+<li><strong>Academic Session:</strong> 2026–2027</li>
+</ul>`
+    },
+
+    dirty_datasets: {
+        keywords: ["dirty dataset", "dirty", "synthetic", "test dataset", "6200", "7300", "dirty negative", "anomalous data", "test files"],
+        answer: `<strong>Testing & Dirty Datasets:</strong>
+<p>To rigorously test ChurnQ's data validation and human-in-the-loop preprocessing pipeline, real-world dirty test datasets were developed:</p>
+<ul>
+<li><strong>telecom_customer_dataset_6200_dirty.csv:</strong> 6,200 records injected with missing values, structural duplicates, and high-value anomalies to validate the 10x median filter and mode/median imputers.</li>
+<li><strong>telecom_customer_dataset_7300_dirty_negative.csv:</strong> 7,300 customer records containing negative values in tenure, charges, and service flags, proving the two-level negative value detection threshold and per-column remediation actions.</li>
+</ul>`
+    },
+
+    research_paper: {
+        keywords: ["research paper", "paper", "draft", "publication", "contributions", "academic paper"],
+        answer: `<strong>Research Paper Summary:</strong>
+<p><strong>Title:</strong> AI-Assisted Customer Churn Prediction for Telecom Using Quantum Computing</p>
+<p><strong>Core Research Contributions:</strong></p>
+<ol>
+<li><strong>Context-Aware Preprocessing:</strong> Replaced blind statistical outlier removal (IQR/Z-score) with domain-guided 10x median filtering to safeguard premium customer data.</li>
+<li><strong>Human-in-the-Loop Anomaly Review:</strong> Integrated LLM explanations (Gemini API) with rule-based fallback, allowing analysts to confirm or override actions.</li>
+<li><strong>Quantum Feature Encoding:</strong> Selected the top 8 mutual-information features for 8-qubit quantum state encoding via ZZFeatureMap.</li>
+<li><strong>End-to-End Retention Loop:</strong> Closed the cycle from prediction to business action via behavioral segmentation and targeted AI retention strategies.</li>
+</ol>`
+    },
+
+    experimental_findings: {
+        keywords: ["metrics", "recall", "precision", "results", "findings", "accuracy", "roc-auc", "cutoff", "performance", "experimental results"],
+        answer: `<strong>Key Experimental Results & Findings (from Thesis):</strong>
+<ul>
+<li><strong>Dataset:</strong> IBM Telco Customer Churn (7,043 customers, ~73% non-churn, ~27% churn).</li>
+<li><strong>Recall on Balanced Subset:</strong> When trained on a balanced subset of 2,990 customers, the model achieved <strong>93.3% recall</strong> at default cutoff, and <strong>91.7% recall</strong> with <strong>32.5% precision</strong> at an optimized decision cutoff of 0.55 on 1,409 held-out test customers.</li>
+<li><strong>Imbalance Impact:</strong> In contrast, training directly on the raw imbalanced set achieved only 13.9% recall, proving the absolute necessity of class-balanced training.</li>
+<li><strong>Academic Honesty & Transparency:</strong> The thesis notes that while the end-to-end framework succeeds, discrimination (ROC-AUC 0.5947) remains exploratory on simulators, so no exaggerated quantum supremacy or advantage is claimed over classical models.</li>
+</ul>`
+    },
+
+    presentation_summary: {
+        keywords: ["ppt", "presentation", "seminar", "slides", "project summary", "defense"],
+        answer: `<strong>Project Seminar / Presentation Highlights:</strong>
+<ul>
+<li><strong>Introduction & Motivation:</strong> Churn costs 5-7x more than retention; existing tools remove high-paying customers by mistake and give zero retention guidance.</li>
+<li><strong>Proposed Innovation:</strong> AI-guided data sanitation + 8-qubit quantum variational classification + automated retention action playbooks.</li>
+<li><strong>Live Demo Flow:</strong> Drag-and-drop CSV upload → Automated Anomaly Review Center → Feature Scaling → Mutual Information Selection → Risk Classification → Interactive Dashboard.</li>
+<li><strong>Conclusion:</strong> Demonstrates a practical, business-centric application of quantum-inspired algorithms in modern telecom analytics.</li>
+</ul>`
+    }
+};
+
+// ─── Scope Guard — Off-Topic Refusal ─────────────────────────────────────────
+const OFF_TOPIC_RESPONSES = [
+    "I'm sorry, I can only answer questions about the <strong>ChurnQ project</strong> — AI-Assisted Customer Churn Prediction for Telecom Using Quantum Computing. Try asking about the tech stack, methodology, team members, or objectives!",
+    "That's outside my scope! I'm specifically designed to help with the <strong>ChurnQ project</strong>. Feel free to ask about VQC, preprocessing, segmentation, or any project-related topic.",
+    "I appreciate the question, but I can only assist with <strong>ChurnQ</strong>-related topics. How about asking about the problem statement, objectives, or quantum computing aspects of the project?",
+    "I'm the ChurnQ assistant — I only know about the <strong>AI-Assisted Churn Prediction</strong> project. Try one of the suggested questions below!"
+];
+
+const GREETING_KEYWORDS = ["hi", "hello", "hey", "good morning", "good afternoon", "good evening", "howdy", "greetings", "namaste", "hii", "hiii", "sup", "yo"];
+const GREETING_RESPONSE = `Hello! I'm the <strong>ChurnQ Assistant</strong>. I can answer any questions about the <strong>AI-Assisted Customer Churn Prediction for Telecom Using Quantum Computing</strong> project.
+
+<p>Try asking me about:</p>
+<ul>
+<li>Project overview & objectives</li>
+<li>Tech stack & architecture</li>
+<li>Quantum VQC model</li>
+<li>Methodology & preprocessing</li>
+<li>Team members</li>
+</ul>
+<p>You can also use the 🎤 microphone to ask by voice! What would you like to know?</p>`;
+
+const THANKS_KEYWORDS = ["thank", "thanks", "thank you", "thx", "ty", "appreciate"];
+const THANKS_RESPONSE = "You're welcome! Feel free to ask me anything else about <strong>ChurnQ</strong>!";
+
+const BYE_KEYWORDS = ["bye", "goodbye", "see you", "exit", "quit", "close"];
+const BYE_RESPONSE = "Goodbye! Feel free to come back anytime you have questions about <strong>ChurnQ</strong>. Good luck with the project!";
+
+// ─── Intent Matching Engine ──────────────────────────────────────────────────
+function findBestMatch(userMessage) {
+    const msg = userMessage.toLowerCase().trim();
+
+    if (GREETING_KEYWORDS.some(g => msg.includes(g)) && msg.length < 30) {
+        return GREETING_RESPONSE;
+    }
+    if (THANKS_KEYWORDS.some(t => msg.includes(t))) {
+        return THANKS_RESPONSE;
+    }
+    if (BYE_KEYWORDS.some(b => msg.includes(b)) && msg.length < 30) {
+        return BYE_RESPONSE;
+    }
+
+    let bestTopic = null;
+    let bestScore = 0;
+
+    for (const [topicKey, topic] of Object.entries(KNOWLEDGE_BASE)) {
+        let score = 0;
+        for (const keyword of topic.keywords) {
+            if (msg.includes(keyword.toLowerCase())) {
+                score += keyword.length;
+            }
+        }
+        if (score > bestScore) {
+            bestScore = score;
+            bestTopic = topic;
+        }
+    }
+
+    if (bestTopic && bestScore >= 3) {
+        return bestTopic.answer;
+    }
+
+    // Fuzzy fallback
+    const words = msg.split(/\s+/).filter(w => w.length > 2);
+    let fuzzyBest = null;
+    let fuzzyScore = 0;
+
+    for (const [topicKey, topic] of Object.entries(KNOWLEDGE_BASE)) {
+        let score = 0;
+        for (const word of words) {
+            for (const keyword of topic.keywords) {
+                if (keyword.includes(word) || word.includes(keyword)) {
+                    score += 1;
+                }
+            }
+        }
+        if (score > fuzzyScore) {
+            fuzzyScore = score;
+            fuzzyBest = topic;
+        }
+    }
+
+    if (fuzzyBest && fuzzyScore >= 2) {
+        return fuzzyBest.answer;
+    }
+
+    return OFF_TOPIC_RESPONSES[Math.floor(Math.random() * OFF_TOPIC_RESPONSES.length)];
+}
+
+// ─── Strip HTML for Speech ───────────────────────────────────────────────────
+function stripHtml(html) {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    return tmp.textContent || tmp.innerText || '';
+}
+
+// ─── Voice Assistant — Text-to-Speech ────────────────────────────────────────
+let voiceEnabled = true;
+let currentUtterance = null;
+
+function speakText(text) {
+    if (!voiceEnabled || !('speechSynthesis' in window)) return;
+
+    // Cancel any ongoing speech
+    window.speechSynthesis.cancel();
+
+    const plainText = stripHtml(text);
+    const utterance = new SpeechSynthesisUtterance(plainText);
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+    utterance.volume = 0.9;
+
+    // Try to pick a good English voice
+    const voices = window.speechSynthesis.getVoices();
+    const preferred = voices.find(v => v.name.includes('Google') && v.lang.startsWith('en')) ||
+                      voices.find(v => v.lang.startsWith('en-US')) ||
+                      voices.find(v => v.lang.startsWith('en'));
+    if (preferred) utterance.voice = preferred;
+
+    currentUtterance = utterance;
+    window.speechSynthesis.speak(utterance);
+    return utterance;
+}
+
+function stopSpeaking() {
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+    }
+}
+
+// ─── Voice Assistant — Speech Recognition ────────────────────────────────────
+let recognition = null;
+let isListening = false;
+
+function initSpeechRecognition() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) return null;
+
+    recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.interimResults = true;
+    recognition.continuous = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onresult = (event) => {
+        let interimTranscript = '';
+        let finalTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+                finalTranscript += transcript;
+            } else {
+                interimTranscript += transcript;
+            }
+        }
+
+        const voiceTranscript = document.getElementById('voiceTranscript');
+        if (voiceTranscript) {
+            voiceTranscript.textContent = finalTranscript || interimTranscript || '';
+        }
+
+        if (finalTranscript) {
+            stopListening();
+            setTimeout(() => sendMessage(finalTranscript), 300);
+        }
+    };
+
+    recognition.onerror = (event) => {
+        console.warn('Speech recognition error:', event.error);
+        const voiceStatus = document.getElementById('voiceStatus');
+        if (event.error === 'no-speech') {
+            if (voiceStatus) voiceStatus.textContent = 'No speech detected. Try again.';
+            setTimeout(stopListening, 1500);
+        } else if (event.error === 'not-allowed') {
+            if (voiceStatus) voiceStatus.textContent = 'Microphone access denied.';
+            setTimeout(stopListening, 2000);
+        } else {
+            stopListening();
+        }
+    };
+
+    recognition.onend = () => {
+        if (isListening) {
+            stopListening();
+        }
+    };
+
+    return recognition;
+}
+
+function startListening() {
+    if (!recognition) {
+        recognition = initSpeechRecognition();
+    }
+    if (!recognition) {
+        alert('Speech Recognition is not supported in this browser. Please use Chrome or Edge.');
+        return;
+    }
+
+    isListening = true;
+    const overlay = document.getElementById('voiceOverlay');
+    const voiceStatus = document.getElementById('voiceStatus');
+    const voiceTranscript = document.getElementById('voiceTranscript');
+    const micBtn = document.getElementById('micBtn');
+
+    overlay.classList.add('active');
+    micBtn.classList.add('recording');
+    if (voiceStatus) voiceStatus.textContent = 'Listening...';
+    if (voiceTranscript) voiceTranscript.textContent = '';
+
+    try {
+        recognition.start();
+    } catch (e) {
+        // Already started
+        console.warn('Recognition already started');
+    }
+}
+
+function stopListening() {
+    isListening = false;
+    const overlay = document.getElementById('voiceOverlay');
+    const micBtn = document.getElementById('micBtn');
+
+    overlay.classList.remove('active');
+    micBtn.classList.remove('recording');
+
+    try {
+        recognition.stop();
+    } catch (e) {
+        // Already stopped
+    }
+}
+
+// ─── UI Logic ────────────────────────────────────────────────────────────────
+const chatMessages = document.getElementById('chatMessages');
+const userInput = document.getElementById('userInput');
+const sendBtn = document.getElementById('sendBtn');
+const clearChatBtn = document.getElementById('clearChatBtn');
+const themeToggleBtn = document.getElementById('themeToggleBtn');
+const suggestionsBar = document.getElementById('suggestionsBar');
+const micBtn = document.getElementById('micBtn');
+const voiceToggleBtn = document.getElementById('voiceToggleBtn');
+const voiceCancelBtn = document.getElementById('voiceCancelBtn');
+
+// ─── Welcome Message ────────────────────────────────────────────────────────
+function showWelcome() {
+    chatMessages.innerHTML = `
+        <div class="welcome-message">
+            <svg class="welcome-logo" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="20" cy="20" r="18" stroke="url(#wgrad1)" stroke-width="2" fill="none"/>
+                <circle cx="20" cy="20" r="10" stroke="url(#wgrad2)" stroke-width="1.2" fill="none" opacity="0.5"/>
+                <circle cx="20" cy="12" r="3" fill="url(#wgrad1)"/>
+                <circle cx="13" cy="24" r="3" fill="url(#wgrad2)"/>
+                <circle cx="27" cy="24" r="3" fill="url(#wgrad1)"/>
+                <line x1="20" y1="12" x2="13" y2="24" stroke="url(#wgrad2)" stroke-width="1" opacity="0.4"/>
+                <line x1="20" y1="12" x2="27" y2="24" stroke="url(#wgrad1)" stroke-width="1" opacity="0.4"/>
+                <line x1="13" y1="24" x2="27" y2="24" stroke="url(#wgrad2)" stroke-width="1" opacity="0.4"/>
+                <defs>
+                    <linearGradient id="wgrad1" x1="0" y1="0" x2="40" y2="40">
+                        <stop offset="0%" stop-color="#ffffff"/>
+                        <stop offset="100%" stop-color="#888888"/>
+                    </linearGradient>
+                    <linearGradient id="wgrad2" x1="40" y1="0" x2="0" y2="40">
+                        <stop offset="0%" stop-color="#aaaaaa"/>
+                        <stop offset="100%" stop-color="#ffffff"/>
+                    </linearGradient>
+                </defs>
+            </svg>
+            <h2>Welcome to ChurnQ Assistant</h2>
+            <p>Ask me anything about the AI-Assisted Customer Churn Prediction for Telecom Using Quantum Computing project.</p>
+            <div class="welcome-features">
+                <span class="welcome-feature">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    Text Chat
+                </span>
+                <span class="welcome-feature">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
+                    Voice Input
+                </span>
+                <span class="welcome-feature">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                    Voice Response
+                </span>
+            </div>
+        </div>
+    `;
+}
+
+// ─── Create Message Bubble ──────────────────────────────────────────────────
+function createMessage(content, sender) {
+    const msgDiv = document.createElement('div');
+    msgDiv.classList.add('message', sender);
+
+    const avatar = document.createElement('div');
+    avatar.classList.add('message-avatar');
+    avatar.textContent = sender === 'bot' ? 'CQ' : 'You';
+
+    const contentDiv = document.createElement('div');
+    contentDiv.classList.add('message-content');
+    contentDiv.innerHTML = content;
+
+    // Add speak button for bot messages
+    if (sender === 'bot') {
+        const speakBtn = document.createElement('button');
+        speakBtn.classList.add('msg-speak-btn');
+        speakBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg> Listen`;
+        speakBtn.addEventListener('click', () => {
+            // Remove speaking class from all other buttons
+            document.querySelectorAll('.msg-speak-btn.speaking').forEach(b => b.classList.remove('speaking'));
+            
+            if (speakBtn.classList.contains('speaking')) {
+                stopSpeaking();
+                speakBtn.classList.remove('speaking');
+                speakBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg> Listen`;
+            } else {
+                speakBtn.classList.add('speaking');
+                speakBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="6" width="12" height="12" rx="2"/></svg> Stop`;
+                const utterance = speakText(content);
+                if (utterance) {
+                    utterance.onend = () => {
+                        speakBtn.classList.remove('speaking');
+                        speakBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg> Listen`;
+                    };
+                }
+            }
+        });
+        contentDiv.appendChild(speakBtn);
+    }
+
+    const timeDiv = document.createElement('div');
+    timeDiv.classList.add('message-time');
+    const now = new Date();
+    timeDiv.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    contentDiv.appendChild(timeDiv);
+
+    msgDiv.appendChild(avatar);
+    msgDiv.appendChild(contentDiv);
+
+    return msgDiv;
+}
+
+// ─── Typing Effect ──────────────────────────────────────────────────────────
+function showTypingIndicator() {
+    const typingDiv = document.createElement('div');
+    typingDiv.classList.add('message', 'bot');
+    typingDiv.id = 'typingIndicator';
+
+    const avatar = document.createElement('div');
+    avatar.classList.add('message-avatar');
+    avatar.textContent = 'CQ';
+
+    const contentDiv = document.createElement('div');
+    contentDiv.classList.add('message-content');
+    contentDiv.innerHTML = `<div class="typing-indicator"><span></span><span></span><span></span></div>`;
+
+    typingDiv.appendChild(avatar);
+    typingDiv.appendChild(contentDiv);
+    chatMessages.appendChild(typingDiv);
+    scrollToBottom();
+}
+
+function removeTypingIndicator() {
+    const indicator = document.getElementById('typingIndicator');
+    if (indicator) indicator.remove();
+}
+
+// ─── Scroll to Bottom ───────────────────────────────────────────────────────
+function scrollToBottom() {
+    chatMessages.scrollTo({ top: chatMessages.scrollHeight, behavior: 'smooth' });
+}
+
+// ─── Send Message ───────────────────────────────────────────────────────────
+let isProcessing = false;
+
+function sendMessage(text) {
+    const msg = (text || userInput.value).trim();
+    if (!msg || isProcessing) return;
+
+    isProcessing = true;
+
+    const welcome = chatMessages.querySelector('.welcome-message');
+    if (welcome) welcome.remove();
+
+    chatMessages.appendChild(createMessage(msg, 'user'));
+    userInput.value = '';
+    scrollToBottom();
+
+    showTypingIndicator();
+
+    const delay = 400 + Math.random() * 600;
+    setTimeout(() => {
+        removeTypingIndicator();
+        const response = findBestMatch(msg);
+        chatMessages.appendChild(createMessage(response, 'bot'));
+        scrollToBottom();
+        saveChatHistory();
+
+        // Auto-speak the response if voice is enabled
+        if (voiceEnabled) {
+            speakText(response);
+        }
+
+        isProcessing = false;
+    }, delay);
+}
+
+// ─── Event Listeners ────────────────────────────────────────────────────────
+sendBtn.addEventListener('click', () => sendMessage());
+
+userInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+    }
+});
+
+// Suggestion chips
+suggestionsBar.addEventListener('click', (e) => {
+    const chip = e.target.closest('.suggestion-chip');
+    if (chip) {
+        sendMessage(chip.dataset.question);
+    }
+});
+
+// Clear chat
+clearChatBtn.addEventListener('click', () => {
+    stopSpeaking();
+    localStorage.removeItem('churnq-chat-history');
+    showWelcome();
+});
+
+// Theme toggle
+themeToggleBtn.addEventListener('click', () => {
+    const html = document.documentElement;
+    const current = html.getAttribute('data-theme');
+    const next = current === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('churnq-theme', next);
+});
+
+// Mic button — start/stop voice input
+micBtn.addEventListener('click', () => {
+    if (isListening) {
+        stopListening();
+    } else {
+        startListening();
+    }
+});
+
+// Voice toggle — enable/disable auto-speak
+voiceToggleBtn.addEventListener('click', () => {
+    voiceEnabled = !voiceEnabled;
+    voiceToggleBtn.classList.toggle('voice-active', voiceEnabled);
+    if (!voiceEnabled) {
+        stopSpeaking();
+    }
+    localStorage.setItem('churnq-voice', voiceEnabled ? 'on' : 'off');
+});
+
+// Voice overlay cancel
+voiceCancelBtn.addEventListener('click', () => {
+    stopListening();
+});
+
+// ─── Chat Persistence (LocalStorage) ────────────────────────────────────────
+function saveChatHistory() {
+    const messages = chatMessages.querySelectorAll('.message');
+    const history = [];
+    messages.forEach(msg => {
+        const sender = msg.classList.contains('user') ? 'user' : 'bot';
+        const content = msg.querySelector('.message-content');
+        const clone = content.cloneNode(true);
+        const time = clone.querySelector('.message-time');
+        if (time) time.remove();
+        const speakBtn = clone.querySelector('.msg-speak-btn');
+        if (speakBtn) speakBtn.remove();
+        history.push({ sender, html: clone.innerHTML });
+    });
+    localStorage.setItem('churnq-chat-history', JSON.stringify(history));
+}
+
+function loadChatHistory() {
+    const data = localStorage.getItem('churnq-chat-history');
+    if (data) {
+        try {
+            const history = JSON.parse(data);
+            if (history.length > 0) {
+                chatMessages.innerHTML = '';
+                history.forEach(item => {
+                    chatMessages.appendChild(createMessage(item.html, item.sender));
+                });
+                scrollToBottom();
+                return true;
+            }
+        } catch (e) {
+            localStorage.removeItem('churnq-chat-history');
+        }
+    }
+    return false;
+}
+
+// ─── Particles Background ───────────────────────────────────────────────────
+function initParticles() {
+    const canvas = document.getElementById('particlesCanvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    const PARTICLE_COUNT = 45;
+
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    class Particle {
+        constructor() { this.reset(); }
+        reset() {
+            this.x = Math.random() * canvas.width;
+            this.y = Math.random() * canvas.height;
+            this.vx = (Math.random() - 0.5) * 0.3;
+            this.vy = (Math.random() - 0.5) * 0.3;
+            this.radius = Math.random() * 1.5 + 0.5;
+            this.opacity = Math.random() * 0.4 + 0.1;
+        }
+        update() {
+            this.x += this.vx;
+            this.y += this.vy;
+            if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+            if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+        }
+        draw() {
+            const theme = document.documentElement.getAttribute('data-theme');
+            const color = theme === 'dark' ? '255, 255, 255' : '0, 0, 0';
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(${color}, ${this.opacity})`;
+            ctx.fill();
+        }
+    }
+
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+        particles.push(new Particle());
+    }
+
+    function drawLines() {
+        const theme = document.documentElement.getAttribute('data-theme');
+        const color = theme === 'dark' ? '255, 255, 255' : '0, 0, 0';
+        for (let i = 0; i < particles.length; i++) {
+            for (let j = i + 1; j < particles.length; j++) {
+                const dx = particles[i].x - particles[j].x;
+                const dy = particles[i].y - particles[j].y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < 140) {
+                    ctx.beginPath();
+                    ctx.moveTo(particles[i].x, particles[i].y);
+                    ctx.lineTo(particles[j].x, particles[j].y);
+                    ctx.strokeStyle = `rgba(${color}, ${0.06 * (1 - dist / 140)})`;
+                    ctx.lineWidth = 0.5;
+                    ctx.stroke();
+                }
+            }
+        }
+    }
+
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => { p.update(); p.draw(); });
+        drawLines();
+        requestAnimationFrame(animate);
+    }
+    animate();
+}
+
+// ─── Initialize ─────────────────────────────────────────────────────────────
+function init() {
+    // Load saved theme
+    const savedTheme = localStorage.getItem('churnq-theme');
+    if (savedTheme) {
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    }
+
+    // Load voice preference
+    const savedVoice = localStorage.getItem('churnq-voice');
+    voiceEnabled = savedVoice !== 'off';
+    voiceToggleBtn.classList.toggle('voice-active', voiceEnabled);
+
+    // Init speech recognition
+    initSpeechRecognition();
+
+    // Load voices (Chrome loads them async)
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.getVoices();
+        window.speechSynthesis.onvoiceschanged = () => {
+            window.speechSynthesis.getVoices();
+        };
+    }
+
+    // Load chat history or show welcome
+    if (!loadChatHistory()) {
+        showWelcome();
+    }
+
+    // Start particles
+    initParticles();
+
+    // Focus input
+    userInput.focus();
+}
+
+init();
+
+</script>
+</body>
+</html>
+
