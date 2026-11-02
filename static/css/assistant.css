@@ -147,7 +147,3 @@
         min-height: min(280px, calc(100dvh - 112px));
     }
 }
-
-body:has(.action-bar) .assistant-dock:has(.assistant-dock-panel[hidden]) {
-    bottom: 100px;
-}

@@ -6,12 +6,34 @@
 
     if (!launcher || !panel || !closeButton || !frame) return;
 
+    const dock = launcher.closest(".assistant-dock");
+    const actionBar = document.querySelector(".action-bar");
+    const DOCK_GAP = 12;
+
+    function placeAboveActionBar() {
+        dock.style.bottom = "";
+        if (!actionBar || !panel.hidden) return;
+
+        const bar = actionBar.getBoundingClientRect();
+        const launcherBox = launcher.getBoundingClientRect();
+        if (bar.top < launcherBox.bottom && bar.bottom > launcherBox.top) {
+            const maxBottom = window.innerHeight - launcherBox.height - DOCK_GAP;
+            const raised = Math.min(window.innerHeight - bar.top + DOCK_GAP, maxBottom);
+            dock.style.bottom = `${raised}px`;
+        }
+    }
+
     function setOpen(open) {
         panel.hidden = !open;
         launcher.setAttribute("aria-expanded", String(open));
         if (open && !frame.src) frame.src = frame.dataset.src;
         if (!open) launcher.focus();
+        placeAboveActionBar();
     }
+
+    window.addEventListener("scroll", placeAboveActionBar, { passive: true });
+    window.addEventListener("resize", placeAboveActionBar);
+    placeAboveActionBar();
 
     launcher.addEventListener("click", () => setOpen(panel.hidden));
     closeButton.addEventListener("click", () => setOpen(false));
