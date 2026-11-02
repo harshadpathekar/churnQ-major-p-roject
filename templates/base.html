@@ -97,7 +97,6 @@
     </div>
 </div>
 
-{% if request.endpoint not in ['home', 'upload_file', 'anomaly_review', 'predict_new_upload'] %}
 <aside class="assistant-dock" aria-label="ChurnQ Assistant">
     <section class="assistant-dock-panel" id="assistant-dock-panel"
              aria-label="Chat with ChurnQ Assistant" hidden>
@@ -126,7 +125,6 @@
 </aside>
 
 <script src="{{ url_for('static', filename='js/assistant.js') }}" defer></script>
-{% endif %}
 
 </body>
 </html>
